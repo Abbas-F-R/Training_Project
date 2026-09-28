@@ -11,10 +11,8 @@ public static class PipelineExtension
 {
     public static WebApplication UseApplicationPipeline(this WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseDeveloperExceptionPage();
-        }
+        // 0. Global Exception Handling: detailed errors in Dev, safe sanitized errors in Prod
+        app.UseMiddleware<GlobalExceptionMiddleware>();
 
         // Apply CORS policy
         app.UseCors(CorsExtension.PolicyName);

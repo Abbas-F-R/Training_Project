@@ -1,0 +1,71 @@
+using System.Text.Json;
+
+namespace OC_System_Training.Infrastructure.Middleware;
+
+/// <summary>
+/// Global exception handling middleware intercepting unhandled exceptions across the HTTP pipeline.
+/// Returns detailed diagnostic error responses (message, exception type, stack trace) exclusively in Development mode,
+/// while providing safe, non-leaking error responses in Production.
+/// </summary>
+public class GlobalExceptionMiddleware(
+    RequestDelegate next,
+    ILogger<GlobalExceptionMiddleware> logger,
+    IHostEnvironment environment)
+{
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
+            await next(context);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unhandled exception occurred during request execution for {Path}", context.Request.Path);
+            await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+    {
+        if (context.Response.HasStarted)
+        {
+            logger.LogWarning("The response has already started; the global exception middleware will not write a response.");
+            return;
+        }
+
+        context.Response.ContentType = "application/json; charset=utf-8";
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+        object errorPayload;
+
+        if (environment.IsDevelopment())
+        {
+            errorPayload = new
+            {
+                status = StatusCodes.Status500InternalServerError,
+                title = "Internal Server Error",
+                message = exception.Message,
+                exceptionType = exception.GetType().FullName,
+                stackTrace = exception.StackTrace,
+                innerException = exception.InnerException?.Message
+            };
+        }
+        else
+        {
+            errorPayload = new
+            {
+                status = StatusCodes.Status500InternalServerError,
+                title = "Internal Server Error",
+                message = "An unexpected error occurred while processing your request. Please contact technical support."
+            };
+        }
+
+        var json = JsonSerializer.Serialize(errorPayload, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = environment.IsDevelopment()
+        });
+
+        await context.Response.WriteAsync(json);
+    }
+}
