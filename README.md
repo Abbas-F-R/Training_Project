@@ -4,7 +4,7 @@
 [![C#](https://img.shields.io/badge/C%23-14.0-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
 [![SQL Server](https://img.shields.io/badge/SQL_Server-2022-CC292B?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
 [![Dapper](https://img.shields.io/badge/Micro_ORM-Dapper_2.1-orange)](https://github.com/DapperLib/Dapper)
-[![Tests](https://img.shields.io/badge/Tests-78_Passed-success?logo=xunit&logoColor=white)](https://xunit.net/)
+[![Tests](https://img.shields.io/badge/Tests-120_Passed-success?logo=xunit&logoColor=white)](https://xunit.net/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 An enterprise-grade RESTful API engineered for academic institution student management. Built with **.NET 10** following **Vertical Slice (Feature-Based) Architecture**, high-performance **Dapper** data access with SQL Server **Stored Procedures & Views**, **In-Transaction Atomic Audit Logging**, **JWT Authentication with Role-Based Access Control (RBAC)**, and **Sqids URL Obfuscation**.
@@ -86,9 +86,10 @@ OC_System_Training/
 │   │   ├── Dtos/                          <-- AuditLogFilter, AuditLogResponse
 │   │   ├── Repositories/                  <-- IAuditLogRepository, AuditLogRepository
 │   │   ├── Services/                      <-- IAuditLogService, AuditLogService
-│   │   └── Sql/                           <-- Tables, indexes, and stored procedures
+│   │   ├── Sql/                           <-- Tables, indexes, and stored procedures
+│   │   └── Validators/                    <-- AuditLogFilterValidator
 │   ├── Auth/                              <-- Authentication & Identity Feature
-│   │   ├── Controllers/                   <-- AuthController (Login, Register, Me)
+│   │   ├── Controllers/                   <-- AuthController (Login, Register)
 │   │   ├── Dtos/                          <-- LoginRequest, LoginResponse, RegisterRequest, UserDto
 │   │   ├── Repositories/                  <-- IUserRepository, UserRepository
 │   │   ├── Services/                      <-- IAuthService, AuthService (BCrypt, JWT)
@@ -100,7 +101,7 @@ OC_System_Training/
 │   │   ├── Repositories/                  <-- IDepartmentRepository, DepartmentRepository
 │   │   ├── Services/                      <-- IDepartmentService, DepartmentService
 │   │   ├── Sql/                           <-- Tables, views, and stored procedures
-│   │   └── Validators/                    <-- DepartmentFormValidator, DepartmentUpdateValidator
+│   │   └── Validators/                    <-- DepartmentFormValidator, DepartmentUpdateValidator, DepartmentFilterValidator
 │   └── Students/                          <-- Students Management Feature
 │       ├── Controllers/                   <-- StudentController (CRUD)
 │       ├── Dtos/                          <-- StudentForm, StudentUpdate, StudentFilter, StudentResponse
@@ -127,17 +128,19 @@ OC_System_Training/
 │   ├── 03_Procedures.sql                  <-- Stored procedures with atomic auditing
 │   ├── 04_SeedData.sql                    <-- Initial seed data
 │   └── MasterMigration.sql                <-- All-in-one consolidated migration script
-├── tests/                                 <-- Automated Test Suite (78 Tests)
-│   └── OC_System_Training.Tests/
-│       ├── AuditLogTests.cs
-│       ├── AuthenticationTests.cs
-│       ├── AuthorizationTests.cs
-│       ├── ControllerTests.cs
-│       ├── DepartmentServiceTests.cs
-│       ├── ExtendedValidationTests.cs
-│       ├── SecurityAndHelperTests.cs
-│       ├── StudentServiceTests.cs
-│       └── ValidationTests.cs
+├── tests/                                 <-- Automated Test Suite (120 Tests)
+│   └── OC_System_Training.Tests/          <-- Strictly Organized by Feature Architecture
+│       ├── Features/                      <-- Feature-by-feature test coverage
+│       │   ├── AuditLogs/                 <-- Controllers, Services, Validators tests
+│       │   ├── Auth/                      <-- Controllers, Services, Validators tests
+│       │   ├── Departments/               <-- Controllers, Services, Validators tests
+│       │   └── Students/                  <-- Controllers, Services, Validators tests
+│       ├── Infrastructure/
+│       │   └── Middleware/                <-- UserContextMiddleware tests
+│       └── Shared/
+│           ├── Base/                          <-- CurrentUser, Response, ServiceResult tests
+│           ├── Helper/                        <-- SqidCodec tests
+│           └── Utils/                         <-- PasswordHasher, ErrorMessagesUtils tests
 ├── Program.cs                             <-- Minimalist, clean composition root
 └── appsettings.json                       <-- Configuration settings
 ```
@@ -234,7 +237,6 @@ Both interfaces feature full support for Bearer JWT token authorization.
 | :--- | :--- | :--- | :--- | :--- |
 | `/api/auth/login` | `POST` | Public | None (`[AllowAnonymous]`) | Allowed |
 | `/api/auth/register` | `POST` | Protected | `Admin` | `401 Unauthorized` / `403 Forbidden` |
-| `/api/auth/me` | `GET` | Protected | Authenticated | `401 Unauthorized` |
 | `/api/department` | `GET` | Protected | Authenticated (`Admin`, `User`) | `401 Unauthorized` |
 | `/api/department/lookup` | `GET` | Protected | Authenticated (`Admin`, `User`) | `401 Unauthorized` |
 | `/api/department` | `POST` | Protected | `Admin` | `403 Forbidden` for standard users |
@@ -251,7 +253,7 @@ Both interfaces feature full support for Bearer JWT token authorization.
 
 ## Automated Testing Suite
 
-The repository includes a comprehensive, production-grade test suite built with **xUnit**, **FluentAssertions**, and **Moq**, verifying 78 distinct test cases across service business logic, authorization rules, security utilities, input validation, and controller responses.
+The repository includes a comprehensive, production-grade test suite built with **xUnit**, **FluentAssertions**, and **Moq**, strictly organized file-by-file to mirror the source project's **Features Architecture**. It verifies 120 distinct test cases across service business logic, authorization rules, security utilities, input validation, and controller responses with 100% pure FluentValidation.
 
 ```bash
 dotnet test
@@ -259,18 +261,15 @@ dotnet test
 
 ### Test Suite Summary:
 ```text
-Passed!  - Failed: 0, Passed: 78, Skipped: 0, Total: 78
+Passed!  - Failed: 0, Passed: 120, Skipped: 0, Total: 120, Duration: 865 ms
 ```
 
-- **`StudentServiceTests.cs` (10 tests):** Business validation, department verification, duplicate student codes, pagination, and soft deletion.
-- **`DepartmentServiceTests.cs` (10 tests):** CRUD logic, unique code validation, lookup retrieval, and error handling.
-- **`AuthenticationTests.cs` (6 tests):** Valid login, password mismatch, non-existent user handling, inactive accounts, and user registration.
-- **`AuthorizationTests.cs` (5 tests):** Endpoint RBAC attributes, class-level role security, and UserContextMiddleware validation.
-- **`AuditLogTests.cs` (3 tests):** Paged audit retrieval and append-only immutability reflection checks.
-- **`ValidationTests.cs` (7 tests):** Student and department form validation, range bounds, and business constraints.
-- **`ExtendedValidationTests.cs` (10 tests):** Update models, pagination filters, login requests, and registration schemas.
-- **`SecurityAndHelperTests.cs` (11 tests):** BCrypt password hashing, Sqids encoding/decoding, pagination calculation, and result envelopes.
-- **`ControllerTests.cs` (4 tests):** API controller action results and user context extraction.
+- **`Features/AuditLogs/` (7 tests):** `AuditLogControllerTests`, `AuditLogServiceTests` (paged retrieval & immutability), `AuditLogFilterValidatorTests`.
+- **`Features/Auth/` (15 tests):** `AuthControllerTests`, `AuthServiceTests` (login, passwords, registration, uniqueness), `LoginRequestValidatorTests`, `RegisterRequestValidatorTests`.
+- **`Features/Departments/` (22 tests):** `DepartmentControllerTests`, `DepartmentServiceTests` (CRUD, lookup, code uniqueness), `DepartmentFormValidatorTests`, `DepartmentUpdateValidatorTests`, `DepartmentFilterValidatorTests`.
+- **`Features/Students/` (24 tests):** `StudentControllerTests`, `StudentServiceTests` (CRUD, duplicate student code, department verification), `StudentFormValidatorTests`, `StudentUpdateValidatorTests`, `StudentFilterValidatorTests`.
+- **`Infrastructure/Middleware/` (3 tests):** `UserContextMiddlewareTests` (UserId claim validation, 401 unauthorized handling, context bypass).
+- **`Shared/` (49 tests):** `CurrentUserTests` (claims resolution), `ResponseTests` (pagination arithmetic), `ServiceResultTests` (result envelopes), `SqidCodecTests` (encode/decode roundtrip), `PasswordHasherTests` (BCrypt hashing and salt uniqueness), `ErrorMessagesUtilsTests` (bilingual localization).
 
 ---
 

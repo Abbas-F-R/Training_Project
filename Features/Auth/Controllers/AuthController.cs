@@ -6,7 +6,7 @@ using OC_System_Training.Features.Auth.Services;
 namespace OC_System_Training.Features.Auth.Controllers;
 
 /// <summary>
-/// Authentication controller handling login, token generation, user registration, and identity resolution.
+/// Authentication controller handling login, token generation, and user account provisioning.
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
@@ -27,20 +27,4 @@ public class AuthController(IAuthService authService) : BaseController
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<LoginResponse>> Register([FromBody] RegisterRequest request) =>
         Ok(await authService.Register(request, Id));
-
-    /// <summary>
-    /// Returns the identity claims of the currently authenticated user from the JWT token.
-    /// </summary>
-    [HttpGet("Me")]
-    [Authorize]
-    public ActionResult<object> GetMe() =>
-        base.Ok(new
-        {
-            UserId = CurrentUser.UserId,
-            UserName = CurrentUser.UserName,
-            FullName = CurrentUser.FullName,
-            Role = CurrentUser.Role,
-            Lang = CurrentUser.Lang,
-            IsAuthenticated = CurrentUser.IsAuthenticated
-        });
 }

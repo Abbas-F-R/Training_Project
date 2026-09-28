@@ -14,7 +14,7 @@ public class ServiceRequest<T>
 
     public ServiceRequest() { }
 
-    public ServiceRequest(T dto, long userId, string userName, string role, string lang)
+    public ServiceRequest(T dto, long userId = 0, string userName = "", string role = "User", string lang = "en")
     {
         Dto = dto;
         UserId = userId;

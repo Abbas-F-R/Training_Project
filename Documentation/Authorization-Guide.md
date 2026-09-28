@@ -63,7 +63,6 @@ The table below documents the security profile for every endpoint across the sys
 |---|---|---|---|---|
 | `/api/auth/login` | `POST` | Public | `[AllowAnonymous]` | N/A |
 | `/api/auth/register` | `POST` | Administrator | `[Authorize(Roles = "Admin")]` | Returns `403 Forbidden` for standard users |
-| `/api/auth/me` | `GET` | Authenticated | `[Authorize]` | Returns `401 Unauthorized` if unauthenticated |
 | `/api/department` | `GET` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |
 | `/api/department/lookup` | `GET` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |
 | `/api/department/{id}` | `GET` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |

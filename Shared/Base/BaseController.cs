@@ -10,6 +10,7 @@ namespace OC_System_Training.Shared.Base;
 public abstract class BaseController : ControllerBase
 {
     private ICurrentUser? _currentUser;
+    public void SetCurrentUser(ICurrentUser currentUser) => _currentUser = currentUser;
     protected ICurrentUser CurrentUser => _currentUser ??= HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
 
     protected long Id => CurrentUser.UserId;
