@@ -8,8 +8,9 @@ using OC_System_Training.Shared.Constants;
 
 namespace OC_System_Training.Features.Departments.Repositories;
 
-// تعليق تدريبي: تطبيق الـ Repository للأقسام.
-// يرث BaseRepository لعمليات الـ CRUD القياسية، ويطبق دالة Lookup المخصصة
+/// <summary>
+/// Department repository implementing base CRUD and custom lookup queries using Dapper.
+/// </summary>
 [Scoped]
 public class DepartmentRepository(DapperContext context)
     : BaseRepository<DepartmentResponse, DepartmentForm, DepartmentUpdate, DepartmentFilter>(context, DbConstants.Tables.Departments),

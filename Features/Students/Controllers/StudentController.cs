@@ -7,37 +7,37 @@ using OC_System_Training.Shared.Base.dto;
 
 namespace OC_System_Training.Features.Students.Controllers;
 
-// تعليق تدريبي: متحكم إدارة الطلاب (StudentController)
-// يرث من GenericController ويحدد سياسة الصلاحيات:
-// - استعراض الطلاب، وإضافتهم، وتعديل بياناتهم متاح لجميع المستخدمين المسجلين (Admin أو User)
-// - عملية الحذف محصورة حصراً بمسؤولي النظام [Authorize(Roles = "Admin")]
+/// <summary>
+/// Controller for student management operations.
+/// Read and write operations are permitted for authenticated users; deletion requires Admin privileges.
+/// </summary>
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
 public class StudentController(IStudentService service)
     : GenericController<StudentResponse, StudentForm, StudentUpdate, StudentFilter>(service)
 {
-    /// <summary>جلب بيانات طالب محدد بواسطة المعرف</summary>
+    /// <summary>Retrieves a single student record by primary key.</summary>
     [HttpGet("{id}")]
     public async Task<ActionResult<StudentResponse>> Get(long id) => 
         await BaseGet(id);
 
-    /// <summary>جلب قائمة الطلاب بنظام الصفحات والبحث والفلترة</summary>
+    /// <summary>Retrieves a paginated and filtered list of students.</summary>
     [HttpGet]
     public async Task<ActionResult<Response<StudentResponse>>> GetAll([FromQuery] StudentFilter filter) => 
         await BaseGetAll(filter);
 
-    /// <summary>إضافة طالب جديد</summary>
+    /// <summary>Creates a new student record.</summary>
     [HttpPost]
     public async Task<ActionResult<StudentResponse>> Add([FromBody] StudentForm form) => 
         await BaseAdd(form);
 
-    /// <summary>تعديل بيانات طالب موجود</summary>
+    /// <summary>Updates an existing student record.</summary>
     [HttpPut("{id}")]
     public async Task<ActionResult<StudentResponse>> Update(long id, [FromBody] StudentUpdate update) => 
         await BaseUpdate(id, update);
 
-    /// <summary>حذف طالب (خاص بالمسؤول Admin فقط - حذف منطقي Soft Delete)</summary>
+    /// <summary>Soft deletes a student record (Admin role required).</summary>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<bool>> Delete(long id) => 

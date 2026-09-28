@@ -2,8 +2,9 @@ using OC_System_Training.Features.AuditLogs.Dtos;
 
 namespace OC_System_Training.Features.AuditLogs.Repositories;
 
-// تعليق تدريبي: واجهة مستودع سجل التدقيق والتتبع
-// تتيح تسجيل الأحداث الحساسة (مثل الدخول الفاشل أو الناجح) واستعراض السجلات للمسؤول
+/// <summary>
+/// Data-access contract for appending audit records and querying historical audit trails.
+/// </summary>
 public interface IAuditLogRepository
 {
     Task LogAsync(

@@ -2,7 +2,9 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Features.AuditLogs.Dtos;
 
-// تعليق تدريبي: DTO المخرجات الخاص بسجل التدقيق للمسؤول
+/// <summary>
+/// Audit trail response representation for administrative audit queries.
+/// </summary>
 public class AuditLogResponse
 {
     [Sqid]

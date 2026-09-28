@@ -1,6 +1,8 @@
 namespace OC_System_Training.Shared.Extensions;
 
-// تعليق تدريبي: امتداد سياسات مشاركة الموارد (CORS Policy)
+/// <summary>
+/// Cross-Origin Resource Sharing (CORS) policy configuration.
+/// </summary>
 public static class CorsExtension
 {
     public const string PolicyName = "AllowSpecificOrigin";

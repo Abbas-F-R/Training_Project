@@ -1,28 +1,23 @@
-// تعليق تدريبي: نقطة انطلاق التطبيق (Program.cs)
-// تطبيقاً لمعمارية OC_System، يبقى هذا الملف نظيفاً ومختصراً للغاية
-// ويفوض كافة عمليات التسجيل والتهيئة إلى الـ Extensions المخصصة
-// تم الاعتماد كلياً على appsettings.json بدلاً من ملفات .env
-
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. تسجيل المتحكمات ومحولات التشفير Sqids و FluentValidation
+// 1. Controller registration with Sqids encoding & FluentValidation
 builder.Services.AddControllersExtension();
 
-// 2. تسجيل الأمان والـ JWT Bearer وإعدادات Swagger
+// 2. Authentication, JWT Bearer configuration & API documentation (Swagger/Scalar)
 builder.Services.AddSecurityExtension(builder.Configuration);
 
-// 3. تسجيل الخدمات وقاعدة البيانات والـ Auto-DI عبر Scrutor
+// 3. Application services, persistence layer & Scrutor Auto-DI
 builder.Services.AddApplicationServices(builder.Configuration);
 
-// 4. تسجيل سياسة الـ CORS
+// 4. CORS configuration
 builder.Services.AddCustomCors();
 
 var app = builder.Build();
 
-// 5. التأكد من تهيئة مستخدم Admin الافتراضي
+// 5. Seed default administrative & testing user accounts
 await DatabaseSeeder.SeedAsync(app.Services);
 
-// 6. تشغيل مسار المعالجة الكامل (Middleware, Auth, Swagger, Scalar, Controllers)
+// 6. Application pipeline middleware configuration
 app.UseApplicationPipeline();
 
 app.Run();

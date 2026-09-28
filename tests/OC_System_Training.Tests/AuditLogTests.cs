@@ -11,7 +11,7 @@ namespace OC_System_Training.Tests;
 
 public class AuditLogTests
 {
-    [Fact(DisplayName = "1. استعلام سجلات التدقيق يُرجع البيانات المرقمة بنجاح مع TotalCount")]
+    [Fact(DisplayName = "AuditLogService.GetAll returns paged audit log results with total count")]
     public async Task AuditLogService_GetAll_ReturnsPagedResult()
     {
         // Arrange
@@ -40,7 +40,7 @@ public class AuditLogTests
         result.TotalCount.Should().Be(2);
     }
 
-    [Fact(DisplayName = "2. التحقق من أن متحكم AuditLogController لا يحتوي على دوال تعديل أو حذف (Append-Only)")]
+    [Fact(DisplayName = "AuditLogController enforces append-only immutability with no update or delete endpoints")]
     public void AuditLogController_HasNoUpdateOrDeleteMethods()
     {
         var controllerType = typeof(AuditLogController);
@@ -51,7 +51,7 @@ public class AuditLogTests
         methods.Should().NotContain("Put");
     }
 
-    [Fact(DisplayName = "3. التحقق من أن واجهة IAuditLogRepository لا تحتوي على دوال تعديل أو حذف")]
+    [Fact(DisplayName = "IAuditLogRepository enforces append-only contracts without update or delete operations")]
     public void AuditLogRepository_HasNoUpdateOrDeleteMethods()
     {
         var repoType = typeof(IAuditLogRepository);

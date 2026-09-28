@@ -5,7 +5,9 @@ using OC_System_Training.Shared.Base.dto;
 
 namespace OC_System_Training.Features.AuditLogs.Services;
 
-// تعليق تدريبي: تطبيق خدمة سجل التدقيق للمسؤولين
+/// <summary>
+/// Service implementation for administrative audit log queries.
+/// </summary>
 [Scoped]
 public class AuditLogService(IAuditLogRepository repository) : IAuditLogService
 {

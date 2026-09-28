@@ -1,6 +1,8 @@
 namespace OC_System_Training.Shared.Utils;
 
-// تعليق تدريبي: قاموس ترجمة رسائل النظام المركزية إلى العربية والإنجليزية
+/// <summary>
+/// Central localized error and operational messages dictionary supporting Arabic and English.
+/// </summary>
 public static class ErrorMessagesUtils
 {
     private static readonly Dictionary<string, Dictionary<string, string>> MessagesDict = new()
@@ -68,21 +70,23 @@ public static class ErrorMessagesUtils
     };
 
     /// <summary>
-    /// تحويل مفتاح الرسالة إلى نص مقروء باللغة المطلوبة
+    /// Translates a message key into localized text based on the requested language code.
     /// </summary>
-    public static string GetMessage(this string key, string? lang = "ar")
+    public static string GetMessage(this string key, string? lang = "en")
     {
-        var targetLang = string.IsNullOrWhiteSpace(lang) ? "ar" : lang.Trim().ToLowerInvariant();
-        if (targetLang != "ar" && targetLang != "en") targetLang = "ar";
+        var targetLang = string.IsNullOrWhiteSpace(lang) ? "en" : lang.Trim().ToLowerInvariant();
+        if (targetLang != "ar" && targetLang != "en") targetLang = "en";
 
         if (MessagesDict.TryGetValue(key, out var translations))
         {
             if (translations.TryGetValue(targetLang, out var message))
                 return message;
-            if (translations.TryGetValue("ar", out var fallback))
-                return fallback;
+            if (translations.TryGetValue("en", out var fallbackEn))
+                return fallbackEn;
+            if (translations.TryGetValue("ar", out var fallbackAr))
+                return fallbackAr;
         }
 
-        return key; // إرجاع المفتاح نفسه إذا لم تتوفر ترجمة
+        return key;
     }
 }

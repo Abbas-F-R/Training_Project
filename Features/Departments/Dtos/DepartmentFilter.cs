@@ -1,7 +1,10 @@
+using OC_System_Training.Shared.Base.dto;
+
 namespace OC_System_Training.Features.Departments.Dtos;
 
-// تعليق تدريبي: DTO الخاص بفلاتر وترقيم الأقسام الدراسية (GET)
-// يرث من BaseFilter ليرث PageNumber وPageSize تلقائياً
+/// <summary>
+/// Query filter and pagination parameters for department listings.
+/// </summary>
 public class DepartmentFilter : BaseFilter
 {
     public string? Name { get; set; }

@@ -3,9 +3,10 @@ using Microsoft.Data.SqlClient;
 
 namespace OC_System_Training.Infrastructure.Persistence;
 
-// تعليق تدريبي: مدير اتصالات Dapper (DapperContext)
-// مسؤول عن إنشاء اتصالات IDbConnection بقاعدة بيانات SQL Server
-// يقرأ نص الاتصال من appsettings.json تحت قسم ConnectionStrings:DefaultConnection
+/// <summary>
+/// Manages SQL Server database connections using Dapper.
+/// Resolves connection string from configuration or environment variables.
+/// </summary>
 public class DapperContext
 {
     private readonly string _connectionString;
@@ -18,7 +19,7 @@ public class DapperContext
     }
 
     /// <summary>
-    /// إنشاء اتصال جديد بقاعدة البيانات
+    /// Creates and returns an active SQL Server database connection.
     /// </summary>
     public IDbConnection CreateConnection() => new SqlConnection(_connectionString);
 }

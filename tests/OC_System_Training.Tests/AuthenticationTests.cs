@@ -23,14 +23,14 @@ public class AuthenticationTests
     {
         var inMemorySettings = new Dictionary<string, string?>
         {
-            { "Jwt:SecretKey", "SuperSecretKeyForOCSystemTrainingProject2026SecureMin32Bytes!" }
+            { "Jwt:SecretKey", "SuperSecretKeyForStudentManagementSystem2026SecureMin32Bytes!" }
         };
         _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(inMemorySettings)
             .Build();
     }
 
-    [Fact(DisplayName = "1. تسجيل الدخول ببيانات صحيحة يرجع Token ويُسجل LOGIN_SUCCESS")]
+    [Fact(DisplayName = "Login with valid credentials returns JWT token and records LOGIN_SUCCESS audit log")]
     public async Task Login_WithValidCredentials_ReturnsToken_And_LogsSuccess()
     {
         // Arrange
@@ -39,7 +39,7 @@ public class AuthenticationTests
         var user = new UserDto
         {
             Id = 1,
-            FullName = "أحمد علي",
+            FullName = "Ahmed Ali",
             UserName = "ahmed",
             PasswordHash = passwordHash,
             Role = "Admin",
@@ -61,13 +61,11 @@ public class AuthenticationTests
         result.Data!.Token.Should().NotBeNullOrWhiteSpace();
         result.Data.Role.Should().Be("Admin");
 
-        // فحص الـ Claims داخل التوكن
         var handler = new JwtSecurityTokenHandler();
         var jwt = handler.ReadJwtToken(result.Data.Token);
         jwt.Claims.First(c => c.Type == "UserName").Value.Should().Be("ahmed");
         jwt.Claims.First(c => c.Type == "Role").Value.Should().Be("Admin");
 
-        // التحقق من تسجيل حدث LOGIN_SUCCESS
         _auditLogRepoMock.Verify(a => a.LogAsync(
             1,
             "LOGIN_SUCCESS",
@@ -79,14 +77,14 @@ public class AuthenticationTests
             true), Times.Once);
     }
 
-    [Fact(DisplayName = "2. تسجيل الدخول بكلمة مرور خاطئة يفشل ويُسجل LOGIN_FAILED دون تسريب كلمة المرور")]
+    [Fact(DisplayName = "Login with wrong password fails and logs LOGIN_FAILED without leaking password")]
     public async Task Login_WithWrongPassword_Fails_And_LogsFailed()
     {
         // Arrange
         var user = new UserDto
         {
             Id = 2,
-            FullName = "سارة حسن",
+            FullName = "Sara Hassan",
             UserName = "sara",
             PasswordHash = PasswordHasher.Hash("CorrectPassword123!"),
             Role = "User",
@@ -105,7 +103,6 @@ public class AuthenticationTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().Be(Messages.InvalidCredentials);
 
-        // التحقق من تسجيل التدقيق كفشل وعدم تسجيل كلمة المرور إطلاقاً
         _auditLogRepoMock.Verify(a => a.LogAsync(
             2,
             "LOGIN_FAILED",
@@ -117,7 +114,7 @@ public class AuthenticationTests
             false), Times.Once);
     }
 
-    [Fact(DisplayName = "3. تسجيل الدخول لمستخدم غير موجود يفشل برسالة موحدة لحماية الخصوصية ويُسجل التدقيق")]
+    [Fact(DisplayName = "Login for non-existent user returns generic InvalidCredentials and logs failed audit")]
     public async Task Login_WithNonExistentUser_FailsGeneric_And_LogsFailed()
     {
         // Arrange
@@ -131,7 +128,7 @@ public class AuthenticationTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be(Messages.InvalidCredentials); // رسالة عامة لا تكشف وجود الاسم
+        result.Error.Should().Be(Messages.InvalidCredentials);
 
         _auditLogRepoMock.Verify(a => a.LogAsync(
             null,
@@ -144,14 +141,14 @@ public class AuthenticationTests
             false), Times.Once);
     }
 
-    [Fact(DisplayName = "4. تسجيل الدخول لحساب معطل (IsActive = false) يُرجع خطأ الحساب معطل")]
+    [Fact(DisplayName = "Login with inactive account returns UserInactive failure")]
     public async Task Login_WithInactiveAccount_ReturnsUserInactive()
     {
         // Arrange
         var user = new UserDto
         {
             Id = 3,
-            FullName = "مستخدم معطل",
+            FullName = "Disabled User",
             UserName = "disabled_user",
             PasswordHash = PasswordHasher.Hash("Pass123!"),
             Role = "User",
@@ -179,5 +176,61 @@ public class AuthenticationTests
             null,
             null,
             false), Times.Once);
+    }
+
+    [Fact(DisplayName = "Register new user succeeds when username is unique")]
+    public async Task Register_WithUniqueUsername_ReturnsToken()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            FullName = "New Registrar",
+            UserName = "registrar",
+            Password = "Password123!",
+            Role = "User"
+        };
+
+        _userRepoMock.Setup(r => r.IsUserNameTaken("registrar")).ReturnsAsync(false);
+        _userRepoMock.Setup(r => r.Add(It.IsAny<UserDto>(), It.IsAny<long?>()))
+            .ReturnsAsync((UserDto dto, long? creator) =>
+            {
+                dto.Id = 10;
+                return dto;
+            });
+
+        var service = new AuthService(_userRepoMock.Object, _auditLogRepoMock.Object, _configuration);
+
+        // Act
+        var result = await service.Register(request, creatorId: 1);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data!.UserName.Should().Be("registrar");
+        result.Data.Token.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact(DisplayName = "Register fails when username already exists")]
+    public async Task Register_WithDuplicateUsername_ReturnsDuplicateRecord()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            FullName = "Duplicate User",
+            UserName = "existing_user",
+            Password = "Password123!",
+            Role = "User"
+        };
+
+        _userRepoMock.Setup(r => r.IsUserNameTaken("existing_user")).ReturnsAsync(true);
+
+        var service = new AuthService(_userRepoMock.Object, _auditLogRepoMock.Object, _configuration);
+
+        // Act
+        var result = await service.Register(request);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be(Messages.DuplicateRecord);
     }
 }

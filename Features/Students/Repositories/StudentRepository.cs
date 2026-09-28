@@ -4,8 +4,9 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Features.Students.Repositories;
 
-// تعليق تدريبي: تطبيق الـ Repository للطلاب
-// يستند إلى BaseRepository ويوجه كافة العمليات إلى إجراءات جدول Students المخزنة
+/// <summary>
+/// Student repository implementation delegating to base stored procedure operations.
+/// </summary>
 [Scoped]
 public class StudentRepository(DapperContext context)
     : BaseRepository<StudentResponse, StudentForm, StudentUpdate, StudentFilter>(context, DbConstants.Tables.Students),

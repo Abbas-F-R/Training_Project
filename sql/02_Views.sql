@@ -1,7 +1,7 @@
 -- ============================================================================
 -- 02_Views.sql
--- مشروع OC_System التدريبي (نظام إدارة الطلاب - Student Management System)
--- إنشاء الـ Views المرافقة للجداول مع ربط العلاقات (LEFT/INNER JOIN)
+-- Student Management System Database Views
+-- Relational Projection Views with JOINs and Soft-Delete Filters
 -- ============================================================================
 
 USE [OC_System_Training_DB];

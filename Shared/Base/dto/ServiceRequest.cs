@@ -1,15 +1,16 @@
 namespace OC_System_Training.Shared.Base.dto;
 
-// تعليق تدريبي: كائن تغليف الطلب (ServiceRequest)
-// يمرر بيانات الـ DTO مصحوبة ببيانات المستخدم المنفذ (UserId, UserName, Role, Lang)
-// لكي لا تعتمد طبقة الـ Service على HttpContext مباشرة
+/// <summary>
+/// Execution request wrapper bundling input DTO with acting user security context.
+/// Decouples service layer from direct HttpContext dependencies.
+/// </summary>
 public class ServiceRequest<T>
 {
     public T Dto { get; set; } = default!;
     public long UserId { get; set; }
     public string UserName { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
-    public string Lang { get; set; } = "ar";
+    public string Lang { get; set; } = "en";
 
     public ServiceRequest() { }
 
@@ -19,6 +20,6 @@ public class ServiceRequest<T>
         UserId = userId;
         UserName = userName;
         Role = role;
-        Lang = string.IsNullOrWhiteSpace(lang) ? "ar" : lang;
+        Lang = string.IsNullOrWhiteSpace(lang) ? "en" : lang;
     }
 }

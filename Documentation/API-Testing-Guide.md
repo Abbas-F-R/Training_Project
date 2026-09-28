@@ -1,23 +1,31 @@
-# دليل اختبار الـ API وتجربة العمليات (API Testing Guide)
-### دليل عملي للمتدربين لاختبار العمليات باستخدام Scalar و Swagger مع أمثلة Payload واقعية وحالات الصلاحيات والتدقيق
+# API Testing & Endpoint Reference Guide
+### Interactive API Exploration (Scalar & Swagger UI), Payload Specifications, and Security Verification
 
 ---
 
-## 1. واجهات الاختبار المتاحة
+## 1. Interactive Documentation & Test Automation
 
-عند تشغيل التطبيق محلياً (`http://localhost:5207`)، يتوفر لديك واجهتان للاختبار التفاعلي:
-1. **واجهة Scalar الحديثة (المستحسنة):**  
-   رابط الوصول: [http://localhost:5207/scalar/v1](http://localhost:5207/scalar/v1)
-2. **واجهة Swagger UI التقليدية:**  
-   رابط الوصول: [http://localhost:5207/swagger](http://localhost:5207/swagger)
+When running the application locally (`http://localhost:5207`), two interactive API exploration interfaces are available:
+
+1. **Scalar Interactive Documentation (Recommended):**  
+   URL: [http://localhost:5207/scalar/v1](http://localhost:5207/scalar/v1)
+2. **Swagger UI:**  
+   URL: [http://localhost:5207/swagger](http://localhost:5207/swagger)
+
+### Automated Test Suite
+In addition to interactive manual testing, the project includes an automated test suite covering unit, integration, validation, service, security, and controller layers:
+```bash
+dotnet test
+```
+*Current test suite status: 78 passed tests (0 failures).*
 
 ---
 
-## 2. الخطوة الأولى: تسجيل الدخول وتفعيل التوكن (Authentication)
+## 2. Authentication & Authorization Setup
 
-كل نقاط الاتصال (ما عدا تسجيل الدخول) محمية وتتطلب توكن **JWT Bearer**.
+All domain endpoints (except authentication) require a valid **JWT Bearer** token.
 
-### 1. إرسال طلب تسجيل الدخول (Login)
+### 1. Authenticate via Login
 - **Method:** `POST`
 - **URL:** `http://localhost:5207/api/auth/login`
 - **Headers:** `Content-Type: application/json`
@@ -29,106 +37,105 @@
 }
 ```
 
-### 2. الاستجابة المتوقعة (200 OK):
+### 2. Expected Response (`200 OK`):
 ```json
 {
   "userId": "UkLWZg9D",
   "userName": "admin",
-  "fullName": "مدير النظام التدريبي",
+  "fullName": "System Administrator",
   "role": "Admin",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "expiresAt": "2026-09-30T20:15:22.8427771Z"
 }
 ```
 
-### 3. تفعيل التوكن في واجهة الاختبار:
-- في **Scalar**: اضغط على خانة **Auth** في الشريط الجانبي واختر **Bearer** وضع نص التوكن.
-- في **Swagger UI**: اضغط على زر **Authorize** الأخضر في أعلى الصفحة، وأدخل التوكن:  
-  `Bearer YOUR_TOKEN_HERE` ثم اضغط **Authorize**.
+### 3. Setting the Token in Testing Tools:
+- **In Scalar:** Click **Auth** in the sidebar, select **Bearer**, and paste the token string.
+- **In Swagger UI:** Click the green **Authorize** button at the top right, enter `Bearer YOUR_TOKEN_HERE`, and confirm.
 
 ---
 
-## 3. اختبار عمليات الأقسام الدراسية (Departments CRUD & Lookup)
+## 3. Academic Departments Endpoints
 
-### A. استعراض الأقسام كـ Lookup للقوائم المنسدلة (Lookup Endpoint)
+### A. Lookup Dropdown Options (Unpaged)
 - **Method:** `GET`
 - **URL:** `http://localhost:5207/api/department/lookup`
-- **الاستجابة المتوقعة (200 OK):**
+- **Response (`200 OK`):**
 ```json
 [
   {
     "id": "UkLWZg9D",
-    "name": "علوم الحاسوب (Computer Science)",
+    "name": "Computer Science",
     "code": "CS"
   },
   {
     "id": "gbHJdmfr",
-    "name": "هندسة البرمجيات (Software Engineering)",
+    "name": "Software Engineering",
     "code": "SE"
   }
 ]
 ```
 
-### B. عرض جميع الأقسام بنظام الترقيم
+### B. List Departments (Paginated)
 - **Method:** `GET`
 - **URL:** `http://localhost:5207/api/department?pageNumber=1&pageSize=10`
 
-### C. إضافة قسم دراسي جديد (خاص بالـ Admin)
+### C. Create Department (`Admin Only`)
 - **Method:** `POST`
 - **URL:** `http://localhost:5207/api/department`
 - **Request Body:**
 ```json
 {
-  "name": "الأمن السيبراني (Cybersecurity)",
+  "name": "Cybersecurity",
   "code": "CYBER"
 }
 ```
 
-### D. تعديل قسم موجود (خاص بالـ Admin)
+### D. Update Department (`Admin Only`)
 - **Method:** `PUT`
 - **URL:** `http://localhost:5207/api/department/{id}`
 - **Request Body:**
 ```json
 {
-  "name": "علوم الحاسوب والبيانات",
-  "code": "CSD"
+  "name": "Data Science & Artificial Intelligence",
+  "code": "DSAI"
 }
 ```
 
-### E. حذف قسم (خاص بالـ Admin - حذف منطقي Soft Delete)
+### E. Delete Department (`Admin Only` - Soft Delete)
 - **Method:** `DELETE`
 - **URL:** `http://localhost:5207/api/department/{id}`
-- **الاستجابة:** `true`
+- **Response:** `true`
 
 ---
 
-## 4. اختبار عمليات إدارة الطلاب (Students CRUD)
+## 4. Student Management Endpoints
 
-### A. إضافة طالب جديد
+### A. Enroll New Student
 - **Method:** `POST`
 - **URL:** `http://localhost:5207/api/student`
 - **Request Body:**
 ```json
 {
-  "fullName": "كرار حيدر جاسم",
+  "fullName": "Alex Mercer",
   "studentCode": "STU-2026-105",
-  "email": "karrar.haidar@univ.edu",
+  "email": "alex.mercer@univ.edu",
   "phoneNumber": "07712345678",
   "departmentId": "UkLWZg9D",
   "stage": 2,
   "birthDate": "2004-03-12"
 }
 ```
-- **الاستجابة المتوقعة (200 OK):**
+- **Expected Response (`200 OK`):**
 ```json
 {
   "id": "Xm49LK2v",
-  "fullName": "كرار حيدر جاسم",
+  "fullName": "Alex Mercer",
   "studentCode": "STU-2026-105",
-  "email": "karrar.haidar@univ.edu",
+  "email": "alex.mercer@univ.edu",
   "phoneNumber": "07712345678",
   "departmentId": "UkLWZg9D",
-  "departmentName": "علوم الحاسوب (Computer Science)",
+  "departmentName": "Computer Science",
   "departmentCode": "CS",
   "stage": 2,
   "birthDate": "2004-03-12T00:00:00",
@@ -136,23 +143,23 @@
 }
 ```
 
-### B. جلب بيانات طالب بالمعرف
+### B. Get Student Profile by ID
 - **Method:** `GET`
 - **URL:** `http://localhost:5207/api/student/{id}`
 
-### C. البحث وتصفية قائمة الطلاب (Search & Paging)
+### C. Search & Filter Students (Paginated)
 - **Method:** `GET`
-- **URL:** `http://localhost:5207/api/student?fullName=علي&stage=3&pageNumber=1&pageSize=5`
+- **URL:** `http://localhost:5207/api/student?fullName=Alex&stage=2&pageNumber=1&pageSize=10`
 
-### D. تعديل بيانات طالب
+### D. Update Student Profile
 - **Method:** `PUT`
 - **URL:** `http://localhost:5207/api/student/{id}`
 - **Request Body:**
 ```json
 {
-  "fullName": "كرار حيدر جاسم الموسوي",
+  "fullName": "Alex Mercer Smith",
   "studentCode": "STU-2026-105",
-  "email": "karrar.mousawi@univ.edu",
+  "email": "alex.smith@univ.edu",
   "phoneNumber": "07799998888",
   "departmentId": "UkLWZg9D",
   "stage": 3,
@@ -160,40 +167,40 @@
 }
 ```
 
-### E. حذف طالب (خاص بالـ Admin فقط)
+### E. Delete Student (`Admin Only` - Soft Delete)
 - **Method:** `DELETE`
 - **URL:** `http://localhost:5207/api/student/{id}`
-- **الاستجابة:** `true`
+- **Response:** `true`
 
 ---
 
-## 5. اختبار استعراض سجلات التدقيق (Audit Logs - Admin Only)
+## 5. Audit Logging (`Admin Only`)
 
 - **Method:** `GET`
 - **URL:** `http://localhost:5207/api/auditlog?pageNumber=1&pageSize=20`
-- **الاستجابة:** قائمة مرقمة بكافة العمليات التي حدثت في النظام مع التوثيق المالي والإداري للحركات.
+- **Response:** Paginated list of operational audit logs tracking all data modifications, administrative events, and authentication attempts.
 
 ---
 
-## 6. اختبار سيناريوهات الأخطاء وفحص الحماية (Security & Validation Scenarios)
+## 6. Security & Negative Scenario Testing
 
-### 1. استدعاء بدون توكن (401 Unauthorized)
-- استدعاء `GET /api/student` بدون إرفاق التوكن في الـ Header.
-- **النتيجة:** `401 Unauthorized`.
+### 1. Unauthenticated Request (`401 Unauthorized`)
+- Invoking `GET /api/student` without supplying a `Bearer <token>` in the `Authorization` header.
+- **Result:** Immediate rejection with `401 Unauthorized`.
 
-### 2. محاولة مستخدم عادي تنفيذ عملية خاصة بالمسؤول (403 Forbidden)
-- سجل الدخول بحساب برتبة `User`، ثم حاول حذف قسم أو طالب (`DELETE /api/student/1`) أو فتح سجلات التدقيق (`GET /api/auditlog`).
-- **النتيجة:** رفض الطلب بحالة **`403 Forbidden`**.
+### 2. Unauthorized Role Privilege Escalation (`403 Forbidden`)
+- Authenticate with a `User` account and attempt to invoke `DELETE /api/student/{id}` or `GET /api/auditlog`.
+- **Result:** Immediate rejection with `403 Forbidden`.
 
-### 3. إضافة طالب برقم جامعي مكرر (Business Validation Error)
-- أرسل طالب جديد يحمل نفس `studentCode` المسجل مسبقاً (`STU-2026-001`).
-- **النتيجة:** استجابة `400 Bad Request`:
+### 3. Duplicate Identifier Conflict (`400 Bad Request`)
+- Attempting to enroll a student with an existing `studentCode` (`STU-2026-001`).
+- **Result:** `400 Bad Request` with message:
 ```json
 {
-  "message": "الرقم الجامعي للطالب مسجل مسبقاً لطالب آخر."
+  "message": "The student code is already in use by another active student."
 }
 ```
 
-### 4. أخطاء بنية المدخلات (FluentValidation)
-- أرسل بريد إلكتروني بدون `@` أو رقم هاتف غير عراقي أو مرحلة دراسية رقم 8.
-- **النتيجة:** استجابة `400 Bad Request` مع تفاصيل الحقول غير المستوفية للشروط.
+### 4. Structural Validation Failure (`400 Bad Request`)
+- Submitting an invalid payload (e.g., blank name, malformed email, stage out of 1–6 range).
+- **Result:** RFC 9110 compliant `400 Bad Request` containing field-level validation errors.

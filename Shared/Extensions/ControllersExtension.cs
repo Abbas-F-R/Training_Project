@@ -2,8 +2,9 @@ using OC_System_Training.Shared.Helper;
 
 namespace OC_System_Training.Shared.Extensions;
 
-// تعليق تدريبي: امتداد تهيئة المتحكمات (ControllersExtension)
-// يربط محولات تشفير الـ Sqids في الـ JSON والـ ModelBinding، ويضبط مسارات الـ URLs لتكون بالحروف الصغيرة
+/// <summary>
+/// Registers API controllers with lowercase URL routing, Sqids model binding, and camelCase JSON serialization.
+/// </summary>
 public static class ControllersExtension
 {
     public static IServiceCollection AddControllersExtension(this IServiceCollection services)
@@ -16,12 +17,12 @@ public static class ControllersExtension
 
         services.AddControllers(options =>
         {
-            // إدراج مزود فك تشفير المعرفات Sqid للـ Route و Query Parameters
+            // Register model binder provider to decode Sqids in route and query parameters
             options.ModelBinderProviders.Insert(0, new SqidModelBinderProvider());
         })
         .AddJsonOptions(options =>
         {
-            // إدراج محول تشفير وفك تشفير المعرفات Sqid داخل نصوص الـ JSON
+            // Register JSON converter to encode/decode Sqids properties in request/response payloads
             options.JsonSerializerOptions.Converters.Add(new SqidJsonConverterFactory());
             options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         });

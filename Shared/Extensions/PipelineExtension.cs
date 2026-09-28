@@ -3,13 +3,10 @@ using Scalar.AspNetCore;
 
 namespace OC_System_Training.Shared.Extensions;
 
-// تعليق تدريبي: امتداد مسار المعالجة (PipelineExtension)
-// يجمع كافة الـ Middlewares في مكان واحد مرتب بدقة هندسية:
-// 1. Exception Handler
-// 2. CORS
-// 3. Swagger & Scalar
-// 4. Authentication -> UserContextMiddleware -> Authorization
-// 5. Controllers Mapping
+/// <summary>
+/// Configures the HTTP request processing pipeline in an engineered sequence:
+/// Exception Handling -> CORS -> Interactive API Docs -> Routing -> Authentication -> UserContext -> Authorization -> Controllers.
+/// </summary>
 public static class PipelineExtension
 {
     public static WebApplication UseApplicationPipeline(this WebApplication app)
@@ -19,10 +16,10 @@ public static class PipelineExtension
             app.UseDeveloperExceptionPage();
         }
 
-        // تطبيق سياسة CORS
+        // Apply CORS policy
         app.UseCors(CorsExtension.PolicyName);
 
-        // قراءة تفعيل Swagger و Scalar من appsettings.json
+        // Swagger and Scalar API documentation
         var isSwaggerEnabled = app.Configuration.GetValue<bool>("Swagger:Enabled", true);
 
         if (isSwaggerEnabled)
@@ -30,7 +27,7 @@ public static class PipelineExtension
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "OC System Training API v1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Student Management System API v1");
                 c.RoutePrefix = "swagger";
             });
 
@@ -41,7 +38,7 @@ public static class PipelineExtension
                 app.MapScalarApiReference(options =>
                 {
                     options
-                        .WithTitle("OC System Training API — Scalar")
+                        .WithTitle("Student Management System API — Scalar")
                         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
                 }).AllowAnonymous();
             }
@@ -49,12 +46,13 @@ public static class PipelineExtension
 
         app.UseRouting();
 
-        // الترتيب هنا جوهري وحاسم:
-        // 1. التحقق من هوية صاحب الطلب (Authentication)
-        // 2. التحقق من سلامة سياق المستخدم في النظام (UserContextMiddleware)
-        // 3. تطبيق قواعد الصلاحيات والمنع (Authorization)
+        // 1. Authenticate JWT Bearer Token
         app.UseAuthentication();
+        
+        // 2. Validate user identity & populate execution context
         app.UseMiddleware<UserContextMiddleware>();
+        
+        // 3. Evaluate endpoint authorization rules (RBAC)
         app.UseAuthorization();
 
         app.MapControllers();

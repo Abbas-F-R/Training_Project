@@ -2,7 +2,9 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Features.Auth.Dtos;
 
-// تعليق تدريبي: DTO استجابة تسجيل الدخول بنجاح مع الـ JWT Token
+/// <summary>
+/// Data transfer object for successful login response containing JWT bearer token and user metadata.
+/// </summary>
 public class LoginResponse
 {
     [Sqid]

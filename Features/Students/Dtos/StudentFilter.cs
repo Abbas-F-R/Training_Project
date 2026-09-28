@@ -1,9 +1,11 @@
 using OC_System_Training.Shared.Attributes;
+using OC_System_Training.Shared.Base.dto;
 
 namespace OC_System_Training.Features.Students.Dtos;
 
-// تعليق تدريبي: DTO الخاص بفلاتر وترقيم الطلاب (GET)
-// يشمل البحث بالنص، التصفية حسب القسم أو المرحلة الدراسية، إضافة لبيانات الترقيم من BaseFilter
+/// <summary>
+/// Query filter and pagination parameters for student directory searches.
+/// </summary>
 public class StudentFilter : BaseFilter
 {
     public string? FullName { get; set; }

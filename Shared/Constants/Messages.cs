@@ -1,7 +1,8 @@
 namespace OC_System_Training.Shared.Constants;
 
-// تعليق تدريبي: مفاتيح رسائل الخطأ والنجاح الموحدة.
-// تُرجع الـ Services هذه المفاتيح، بينما يتولى الـ Controller ترجمتها للغة المطلوبة.
+/// <summary>
+/// Standard application message keys returned by services and localized at the controller layer.
+/// </summary>
 public static class Messages
 {
     public const string RecordNotFound = "RecordNotFound";

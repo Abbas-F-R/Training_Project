@@ -4,7 +4,9 @@ using Sqids;
 
 namespace OC_System_Training.Shared.Helper;
 
-// تعليق تدريبي: JsonConverter تلقائي يقوم بتشفير وفك تشفير الـ long في الـ JSON
+/// <summary>
+/// JSON converter factory for serializing/deserializing long and long? values with Sqids encryption.
+/// </summary>
 public class SqidJsonConverterFactory : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert)

@@ -2,7 +2,9 @@ using OC_System_Training.Features.Auth.Dtos;
 
 namespace OC_System_Training.Features.Auth.Repositories;
 
-// تعليق تدريبي: واجهة مستودع المستخدمين للتحقق من الحسابات والمصادقة
+/// <summary>
+/// Data-access contract for user account queries and persistence.
+/// </summary>
 public interface IUserRepository
 {
     Task<UserDto?> GetByUserName(string userName);

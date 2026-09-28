@@ -3,19 +3,21 @@ using OC_System_Training.Features.Students.Dtos;
 
 namespace OC_System_Training.Features.Students.Validators;
 
-// تعليق تدريبي: مدقق معلمات فلترة وترقيم الطلاب
+/// <summary>
+/// Validator for student pagination and filter criteria.
+/// </summary>
 public class StudentFilterValidator : AbstractValidator<StudentFilter>
 {
     public StudentFilterValidator()
     {
         RuleFor(x => x.PageNumber)
-            .GreaterThanOrEqualTo(1).WithMessage("رقم الصفحة يجب أن يكون 1 على الأقل.");
+            .GreaterThanOrEqualTo(1).WithMessage("Page number must be at least 1.");
 
         RuleFor(x => x.PageSize)
-            .InclusiveBetween(1, 100).WithMessage("حجم الصفحة يجب أن يكون بين 1 و 100.");
+            .InclusiveBetween(1, 100).WithMessage("Page size must be between 1 and 100.");
 
         RuleFor(x => x.Stage)
             .InclusiveBetween(1, 6).When(x => x.Stage.HasValue)
-            .WithMessage("المرحلة الدراسية المحددة للفلترة يجب أن تكون بين 1 و 6.");
+            .WithMessage("Stage filter must be between 1 and 6.");
     }
 }

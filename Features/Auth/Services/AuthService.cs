@@ -12,9 +12,10 @@ using OC_System_Training.Shared.Utils;
 
 namespace OC_System_Training.Features.Auth.Services;
 
-// تعليق تدريبي: خدمة المصادقة (AuthService)
-// مسؤولة عن التحقق من بيانات الدخول، تسجيل التدقيق لأحداث الدخول (LOGIN_SUCCESS / LOGIN_FAILED)،
-// تشفير كلمات المرور بـ BCrypt، وتوليد توكن JWT موقع يحمل Claims المستخدم
+/// <summary>
+/// Authentication service providing credential verification, BCrypt password hashing,
+/// atomic audit logging for authentication events, and signed JWT issuance.
+/// </summary>
 [Scoped]
 public class AuthService(
     IUserRepository repository,
@@ -25,11 +26,11 @@ public class AuthService(
     {
         var userName = request.UserName.Trim();
 
-        // 1. البحث عن المستخدم باسم المستخدم
+        // 1. Locate user record by username
         var user = await repository.GetByUserName(userName);
         if (user == null)
         {
-            // تسجيل محاولة دخول فاشلة لمستخدم غير موجود (دون تسجيل أي كلمة مرور)
+            // Record failed authentication attempt without exposing sensitive details
             await auditLogRepository.LogAsync(
                 userId: null,
                 action: "LOGIN_FAILED",
@@ -41,7 +42,7 @@ public class AuthService(
             return ServiceResult<LoginResponse>.Failure(Messages.InvalidCredentials);
         }
 
-        // 2. التحقق من حالة تفعيل الحساب
+        // 2. Validate account active status
         if (!user.IsActive)
         {
             await auditLogRepository.LogAsync(
@@ -55,7 +56,7 @@ public class AuthService(
             return ServiceResult<LoginResponse>.Failure(Messages.UserInactive);
         }
 
-        // 3. مطابقة كلمة المرور المشفرة
+        // 3. Verify BCrypt hashed password
         if (!PasswordHasher.Verify(request.Password, user.PasswordHash))
         {
             await auditLogRepository.LogAsync(
@@ -69,7 +70,7 @@ public class AuthService(
             return ServiceResult<LoginResponse>.Failure(Messages.InvalidCredentials);
         }
 
-        // 4. تسجيل نجاح تسجيل الدخول في سجل التدقيق
+        // 4. Log successful authentication event to audit log
         await auditLogRepository.LogAsync(
             userId: user.Id,
             action: "LOGIN_SUCCESS",
@@ -79,18 +80,18 @@ public class AuthService(
             isSuccess: true
         );
 
-        // 5. توليد التوكن وإرجاع الاستجابة
+        // 5. Generate signed JWT token and return response
         var response = GenerateJwtToken(user);
         return ServiceResult<LoginResponse>.Ok(response);
     }
 
     public async Task<ServiceResult<LoginResponse>> Register(RegisterRequest request, long? creatorId = null)
     {
-        // 1. فحص عدم تكرار اسم المستخدم
+        // 1. Validate username uniqueness
         if (await repository.IsUserNameTaken(request.UserName.Trim()))
             return ServiceResult<LoginResponse>.Failure(Messages.DuplicateRecord);
 
-        // 2. إنشاء المستخدم وتشفير كلمة المرور بـ BCrypt
+        // 2. Hash password with BCrypt and initialize user entity
         var newUser = new UserDto
         {
             FullName = request.FullName.Trim(),
@@ -111,7 +112,7 @@ public class AuthService(
     private LoginResponse GenerateJwtToken(UserDto user)
     {
         var secretKey = configuration["Jwt:SecretKey"]
-                        ?? "SuperSecretKeyForOCSystemTrainingProject2026SecureMin32Bytes!";
+                        ?? "SuperSecretKeyForStudentManagementSystem2026SecureMin32Bytes!";
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -127,7 +128,7 @@ public class AuthService(
             new("FullName", user.FullName),
             new(ClaimTypes.Role, user.Role),
             new("Role", user.Role),
-            new("Lang", "ar")
+            new("Lang", "en")
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -135,8 +136,8 @@ public class AuthService(
             Subject = new ClaimsIdentity(claims),
             Expires = expires,
             SigningCredentials = credentials,
-            Issuer = "OC_System_Training",
-            Audience = "OC_System_Training_Clients"
+            Issuer = "StudentManagementSystem",
+            Audience = "StudentManagementSystemClients"
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();

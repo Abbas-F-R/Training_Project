@@ -5,14 +5,15 @@ using OC_System_Training.Features.Auth.Services;
 
 namespace OC_System_Training.Features.Auth.Controllers;
 
-// تعليق تدريبي: متحكم المصادقة وتسجيل الدخول (AuthController)
-// يوفر نقطة تسجيل الدخول ومعرفة بيانات المستخدم الحالي
+/// <summary>
+/// Authentication controller handling login, token generation, user registration, and identity resolution.
+/// </summary>
 [Route("api/[controller]")]
 [ApiController]
 public class AuthController(IAuthService authService) : BaseController
 {
     /// <summary>
-    /// تسجيل الدخول والحصول على JWT Token
+    /// Authenticates user credentials and issues a signed JWT Bearer token.
     /// </summary>
     [HttpPost("Login")]
     [AllowAnonymous]
@@ -20,7 +21,7 @@ public class AuthController(IAuthService authService) : BaseController
         Ok(await authService.Login(request));
 
     /// <summary>
-    /// إنشاء حساب مستخدم جديد (خاص بالمسؤول Admin فقط)
+    /// Registers a new user account (restricted to Admin role).
     /// </summary>
     [HttpPost("Register")]
     [Authorize(Roles = "Admin")]
@@ -28,7 +29,7 @@ public class AuthController(IAuthService authService) : BaseController
         Ok(await authService.Register(request, Id));
 
     /// <summary>
-    /// جلب معلومات المستخدم المتصل حالياً من الـ Token
+    /// Returns the identity claims of the currently authenticated user from the JWT token.
     /// </summary>
     [HttpGet("Me")]
     [Authorize]

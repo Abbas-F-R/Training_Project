@@ -6,8 +6,9 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Infrastructure.Persistence.Repositories.RepositoryWrapper;
 
-// تعليق تدريبي: تطبيق الـ RepositoryWrapper
-// يقوم بحقن وتوفير الـ Repositories المتاحة في النظام لخدمة الـ Services
+/// <summary>
+/// Implements repository wrapper pattern to coordinate repositories across features.
+/// </summary>
 [Scoped]
 public class RepositoryWrapper(
     IDepartmentRepository department,

@@ -1,7 +1,7 @@
 -- ============================================================================
 -- 04_SeedData.sql
--- مشروع OC_System التدريبي (نظام إدارة الطلاب - Student Management System)
--- بيانات أولية تجريبية للأقسام والطلاب والمستخدمين
+-- Student Management System Seed Data
+-- Initial Data for Departments, Students, and Users
 -- ============================================================================
 
 USE [OC_System_Training_DB];

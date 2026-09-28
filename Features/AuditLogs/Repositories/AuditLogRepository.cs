@@ -6,8 +6,9 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Features.AuditLogs.Repositories;
 
-// تعليق تدريبي: تطبيق مستودع سجل التدقيق (AuditLogRepository)
-// مسؤوليته تنفيذ إجراءات AuditLogsInsert و AuditLogsGetAll عبر Dapper
+/// <summary>
+/// Repository for inserting and querying append-only audit trail entries via Stored Procedures.
+/// </summary>
 [Scoped]
 public class AuditLogRepository(DapperContext context) : IAuditLogRepository
 {
@@ -42,7 +43,7 @@ public class AuditLogRepository(DapperContext context) : IAuditLogRepository
         }
         catch
         {
-            // لا نسمح لخطأ تسجيل التدقيق الفرعي غير الحرج بإسقاط التطبيق إذا كان خارج سياق المعاملة
+            // Suppress non-critical external audit logging failures outside transactional boundaries
         }
     }
 

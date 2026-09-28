@@ -1,113 +1,103 @@
-# دليل التحقق من صحة البيانات (Validation Guide)
-### هرم التحقق الثلاثي: FluentValidation، منطق العمل، وقيود قاعدة البيانات
+# Data Validation Architecture Guide
+### The Three-Tier Validation Pyramid: Input Formatting, Domain Business Rules, and Database Constraints
 
 ---
 
-## 1. لماذا نحتاج إلى التحقق (Validation)؟ ولماذا لا نثق بالـ Frontend؟
+## 1. Architectural Philosophy: Zero Trust on Input
 
-القاعدة الأولى والأهم في أمن وتطوير برمجيات الـ Backend:  
-> **"كل مدخلات العميل مشبوهة حتى يثبت العكس (Never Trust Client Input)."**
+A foundational security principle for backend architecture is:
+> **"Never trust client-supplied input under any circumstances."**
 
-### لماذا لا نكتفي بالتحقق في الواجهة الأمامية (Frontend Validation)؟
-1. **سهولة التجاوز:** يمكن لأي متدرب أو مستخدم تجاوز فحص الـ JavaScript في المتصفح بكل بساطة عبر إيقاف تفعيل JS أو إرسال الطلب عبر Postman أو cURL مباشرة إلى الخادم.
-2. **سلامة وتماسك البيانات (Data Integrity):** وصول بيانات فاسدة أو غير منطقية (مثل بريد إلكتروني بدون `@` أو رقم هاتف تالف أو مرحلة دراسية رقم 99) يتسبب في أخطاء وقت التشغيل داخل النظام ويفسد تقارير الكلية.
-3. **منع هجمات الحقن والعبث:** التحقق الصارم يمنع إدخال نصوص خبيثة أو قيم سالبة للمعرفات.
+### Why Frontend Validation Alone is Insufficient:
+1. **Client-Side Bypassing:** Client-side JavaScript validation exists solely for user experience (immediate feedback). Any caller can bypass browser checks via direct HTTP tools (cURL, Postman, automated scripts) or by disabling client scripts.
+2. **Data Consistency & Integrity:** Malformed inputs (e.g., negative identifiers, invalid dates, malformed emails) corrupt downstream business workflows and analytical reporting.
+3. **Defense Against Injection & Tampering:** Robust validation sanitizes and restricts payload boundaries before inputs reach query layers or external systems.
 
 ---
 
-## 2. هرم التحقق الثلاثي في معمارية OC_System (The 3-Tier Validation Pyramid)
+## 2. The Three-Tier Validation Pyramid
 
-لا نعتمد على مكان واحد للتحقق، بل نوزع المسؤوليات على 3 مستويات محكمة:
+The architecture divides validation responsibilities across three distinct, coordinated tiers:
 
 ```mermaid
 graph TD
-    Client["العميل / الطلب الخارجي"] --> L1["المستوى 1: فحص بنية المدخلات (FluentValidation)<br/>(الحقول الإلزامية، أطوال النصوص، Regex، التنسيق)"]
-    L1 --> L2["المستوى 2: فحص قواعد العمل (Service Layer)<br/>(فحص التكرار، وجود القسم المرتبط، حالة الحساب)"]
-    L2 --> L3["المستوى 3: صمام الأمان النهائي (Database Constraints)<br/>(CHECK Constraints, Foreign Keys, Filtered Unique Indexes)"]
+    Client["Client / External HTTP Request"] --> L1["Tier 1: Structural Input Validation (FluentValidation)<br/>(Required fields, length limits, regex patterns, value ranges)"]
+    L1 --> L2["Tier 2: Domain Business Rules (Service Layer)<br/>(Uniqueness checks, foreign key existence, account status)"]
+    L2 --> L3["Tier 3: Database Safeguards (SQL Server Constraints)<br/>(CHECK constraints, Foreign Keys, Filtered Unique Indexes)"]
 ```
 
 ---
 
-## 3. تفاصيل المستويات الثلاثة وتوزيع المسؤوليات
+## 3. Tier Specifications & Responsibilities
 
-### المستوى 1: التحقق من بنية المدخلات (Input Validation عبر FluentValidation)
-- **الموقع:** داخل مجلد `Features/<Feature>/Validators/`.
-- **المسؤولية:** التأكد من أن البيانات المرسلة في الـ Request Body أو Query تطابق القواعد الشكلية البسيطة دون الحاجة للاتصال بقاعدة البيانات:
-  - الحقل ليس فارغاً (`NotEmpty`).
-  - النص لا يتجاوز الحد الأقصى (`MaximumLength`).
-  - البريد الإلكتروني يحمل صيغة بريد صحيحة (`EmailAddress`).
-  - رقم الهاتف عراقي نظامي يبدأ بـ 07 (`Matches(@"^07[0-9]{9}$")`).
-  - المرحلة الدراسية محصورة بين 1 و 6 (`InclusiveBetween(1, 6)`).
-  - تاريخ الميلاد في الماضي وليس مستقبلياً (`LessThanOrEqualTo(DateTime.Today)`).
-- **السلوك عند الفشل:** يرفض الـ Framework الطلب فوراً ويرجع **`400 Bad Request`** بقائمة الحقول الخاطئة ورسائلها، دون تشغيل الـ Controller أو الخدمة.
+### Tier 1: Structural Input Validation (FluentValidation)
+- **Location:** `Features/<Feature>/Validators/`
+- **Responsibility:** Validates the structural integrity and scalar boundaries of incoming request DTOs without performing I/O or database operations:
+  - Required values (`NotEmpty()`).
+  - Text boundary lengths (`MaximumLength(150)`).
+  - Standard format regexes (`EmailAddress()`, phone number patterns).
+  - Numeric ranges (`InclusiveBetween(1, 6)` for academic stages).
+  - Date validity (`LessThanOrEqualTo(DateTime.Today)` for birth dates).
+- **Failure Behavior:** ASP.NET Core immediately halts pipeline execution and returns an **RFC 9110 compliant `400 Bad Request`** with a structured field-to-error dictionary. Neither the controller action nor domain services are executed.
 
-### المستوى 2: التحقق من قواعد العمل (Business Rules Validation في Service Layer)
-- **الموقع:** داخل `Features/<Feature>/Services/<Entity>Service.cs`.
-- **المسؤولية:** التحقق من القواعد المنطقية التي تتطلب قراءة من قاعدة البيانات والتأكد من سياق النظام:
-  - **فحص التكرار:** هل الرقم الجامعي للطالب مسجل مسبقاً لطالب آخر فعال؟ (`IsDuplicateAsync("StudentCode", ...)`).
-  - **فحص التبعية:** هل القسم الدراسي الذي يحاول الطالب التسجيل فيه موجود وفعال وغير محذوف؟ (`wrapper.Department.Get(...)`).
-  - **الاستثناء أثناء التعديل:** فحص عدم التكرار مع استثناء السجل الحالي (`excludeId: id`).
-- **السلوك عند الفشل:** ترجع الخدمة كائن `ServiceResult<T>.Failure(Messages.DuplicateStudentCode)` ويقوم الـ Controller بترجمتها إلى العربية وإرجاع `400 Bad Request` برسالة مفهومة.
+### Tier 2: Domain Business Rules (Service Layer)
+- **Location:** `Features/<Feature>/Services/<Entity>Service.cs`
+- **Responsibility:** Validates contextual domain rules that require state inspection against the persistence layer:
+  - **Uniqueness Validation:** Verifying that a `StudentCode` or `DepartmentCode` is not already actively assigned to another record via `IsDuplicateAsync`.
+  - **Relational Existence:** Verifying that a referenced `DepartmentId` points to an active, non-deleted department before student creation.
+  - **Update Isolation:** Ensuring duplicate checks exclude the current entity (`excludeId: id`) during updates.
+- **Failure Behavior:** The service returns a typed `ServiceResult<T>.Failure(ErrorCode)` without throwing runtime exceptions. The `BaseController` translates this into an appropriate HTTP response (e.g., `400 Bad Request` with an localized error message).
 
-### المستوى 3: صمام الأمان النهائي (Database Constraints & Filtered Indexes)
-- **الموقع:** داخل ملفات SQL والجداول في SQL Server.
-- **المسؤولية:** خط الدفاع الأخير لحماية قاعدة البيانات في حال حدوث أي خطأ برمجي غير متوقع في الـ C#:
-  - `PK_Students`: المفتاح الأساسي.
-  - `FK_Students_Departments`: قيد المفتاح الأجنبي مع منع الحذف العشوائي (`ON DELETE NO ACTION`).
-  - `CK_Students_Stage`: قيد `CHECK (Stage BETWEEN 1 AND 6)`.
-  - `CK_Students_Email`: قيد `CHECK (Email IS NULL OR Email LIKE '%_@__%.__%')`.
-  - `CK_Students_BirthDate`: قيد `CHECK (BirthDate IS NULL OR BirthDate <= GETDATE())`.
-  - `UQ_Students_StudentCode_Active`: فهرس فريد مصفى يمنع تكرار الرقم الجامعي بين السجلات النشطة (`WHERE IsDeleted = 0`).
+### Tier 3: Database Constraints (Defense in Depth)
+- **Location:** SQL Server Schema DDL (`Tables`, `Constraints`, `Indexes`)
+- **Responsibility:** Serves as the ultimate safeguard ensuring physical data integrity even in the event of unexpected application bugs, background workers, or manual administrative scripts:
+  - `PK_Students`: Clustered primary key enforcing entity uniqueness.
+  - `FK_Students_Departments`: Referential integrity preventing orphaned records.
+  - `CK_Students_Stage`: Hardware-level check (`Stage BETWEEN 1 AND 6`).
+  - `CK_Students_Email`: Format verification check.
+  - `CK_Students_BirthDate`: Temporal boundary check (`BirthDate <= GETDATE()`).
+  - `UQ_Students_StudentCode_Active`: Filtered unique index enforcing code uniqueness across active records.
 
 ---
 
-## 4. استجابة أخطاء الـ Validation الموحدة
+## 4. Standardized Error Response Specifications
 
-عند إرسال بيانات غير صالحة، يضمن النظام إرجاع رسائل دقيقة ومفصلة دون تسريب أي تفاصيل تقنية داخلية أو Stack Traces:
+When validation fails, the API responds with structured, deterministic error payloads:
 
-### مثال 1: إرسال بيانات تخالف FluentValidation (400 Bad Request)
-- **الطلب:**
-```json
-{
-  "fullName": "",
-  "studentCode": "STU 101",
-  "email": "invalid-email-address",
-  "phoneNumber": "12345",
-  "departmentId": 0,
-  "stage": 9,
-  "birthDate": "2030-01-01"
-}
-```
-- **الاستجابة الفورية من الـ API (400 Bad Request):**
+### Scenario 1: Structural Validation Failure (FluentValidation)
+- **Status:** `400 Bad Request`
+- **Payload:**
 ```json
 {
   "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
   "title": "One or more validation errors occurred.",
   "status": 400,
   "errors": {
-    "FullName": ["اسم الطالب الكامل مطلوب."],
-    "StudentCode": ["الرقم الجامعي يجب أن يحتوي على أحرف وأرقام ورموز صحيحة فقط."],
-    "Email": ["البريد الإلكتروني المدخل غير صالح."],
-    "PhoneNumber": ["رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 11 رقماً."],
-    "DepartmentId": ["يجب تحديد قسم دراسي صالح للطالب."],
-    "Stage": ["المرحلة الدراسية يجب أن تكون بين 1 و 6."],
-    "BirthDate": ["تاريخ ميلاد الطالب يجب أن يكون في الماضي."]
+    "FullName": ["Full name is required."],
+    "StudentCode": ["Student code must contain only valid alphanumeric characters."],
+    "Email": ["The provided email address is invalid."],
+    "PhoneNumber": ["Phone number must be a valid 11-digit mobile number starting with 07."],
+    "DepartmentId": ["A valid department must be selected."],
+    "Stage": ["Academic stage must be between 1 and 6."],
+    "BirthDate": ["Birth date cannot be in the future."]
   }
 }
 ```
 
-### مثال 2: إرسال قسم دراسي غير موجود (فحص قواعد العمل في الخدمة)
-- **الاستجابة:**
+### Scenario 2: Referenced Entity Not Found (Domain Rule)
+- **Status:** `400 Bad Request`
+- **Payload:**
 ```json
 {
-  "message": "القسم الدراسي المحدد غير موجود."
+  "message": "The selected department does not exist or has been deactivated."
 }
 ```
 
-### مثال 3: إرسال رقم جامعي مكرر لطالب آخر (فحص التكرار في الخدمة)
-- **الاستجابة:**
+### Scenario 3: Duplicate Identifier Conflict (Domain Rule)
+- **Status:** `400 Bad Request`
+- **Payload:**
 ```json
 {
-  "message": "الرقم الجامعي للطالب مسجل مسبقاً لطالب آخر."
+  "message": "The student code is already in use by another active student."
 }
 ```

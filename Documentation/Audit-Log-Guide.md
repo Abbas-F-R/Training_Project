@@ -1,67 +1,70 @@
-# دليل سجل التدقيق والتتبع (Audit Log Guide)
-### التتبع المالي والإداري للعمليات، سلامة البيانات، وتدقيق الإجراءات المخزنة
+# Audit Logging & System Activity Tracking Guide
+### Operational Accountability, Append-Only Storage, In-Transaction Auditing, and Data Integrity
 
 ---
 
-## 1. ما هو سجل التدقيق (Audit Log) ولماذا نحتاجه؟
+## 1. Purpose & Core Principles
 
-في أي نظام Backend إنتاجي حقيقي، لا يكفي أن يقوم النظام بتنفيذ العمليات؛ بل يجب أن يكون قادراً على الإجابة بشكل قاطع عن الأسئلة التالية:
-- **من** قام بهذه العملية؟ (`UserId`)
-- **ماذا** فعل بالضبط؟ (`Action`: إضافة، تعديل، حذف، محاولة دخول)
-- **على أي سجل** حدث التغيير؟ (`EntityName` و `EntityId`)
-- **متى** حدث ذلك بدقة؟ (`CreatedAt`)
-- **ما هي البيانات** التي أُدخلت أو عُدلت؟ (`Changes`)
-- **هل نجحت** العملية أم فشلت؟ (`IsSuccess`)
+In an enterprise-grade backend system, completing domain operations is insufficient without comprehensive operational traceability. The system must reliably answer critical auditing and compliance questions:
+- **Who** executed the action? (`UserId`)
+- **What** operation was performed? (`Action`: INSERT, UPDATE, DELETE, LOGIN_SUCCESS, LOGIN_FAILED)
+- **Which** entity and record was affected? (`EntityName` and `EntityId`)
+- **When** did the event occur? (`CreatedAt`)
+- **What data** was provided or modified? (`Changes` JSON payload)
+- **Was** the operation successful? (`IsSuccess`)
 
-### الفروق الجوهرية التي يجب أن يفهمها المتدرب:
-| المعيار | سجل التدقيق (Audit Log) | سجلات التطبيق (Application Logs) | سجلات الأخطاء (Error Logs) |
-|---------|-------------------------|-----------------------------------|----------------------------|
-| **الجمهور المستهدف** | مدراء النظام، المدققون الماليون والأمنيون | مطورو البرمجيات وفريق الـ DevOps | فريق الصيانة وحل المشاكل الفنية |
-| **مكان الحفظ** | جدول دائم في قاعدة البيانات (`AuditLogs`) | ملفات نصية أو أدوات مثل Seq/Elasticsearch | أدوات مراقبة مثل Sentry أو ملفات Log |
-| **طبيعة البيانات** | أحداث العمل والحركات (Business Events) | تفاصيل مسار المعالجة وسرعة التنفيذ | رسائل الاستثناءات والـ Stack Traces |
-| **القابلية للحذف** | **غير قابل للحذف نهائياً (Append-Only)** | تُحذف أو تُؤرشف دورياً لتوفير المساحة | تُحذف بعد حل المشكلة |
+### Taxonomy: Audit Logs vs. Application Logs vs. Error Logs
+
+| Dimension | Audit Logs | Application Logs | Error / Diagnostic Logs |
+|---|---|---|---|
+| **Primary Audience** | System Administrators, Compliance Officers, Security Auditors | Software Engineers, DevOps Team | Support Engineers, On-call Developers |
+| **Storage Destination** | Persistent Relational Database Table (`AuditLogs`) | Text logs, Seq, Elasticsearch, CloudWatch | Sentry, Application Insights, Log files |
+| **Data Nature** | Business events, state mutations, and security events | Request execution metrics, traces, performance stats | Unhandled exceptions, stack traces, crash dumps |
+| **Immutability & Retention** | **Append-Only, strictly immutable (No updates or deletes)** | Rolling window retention (e.g., 30–90 days) | Retained until bug resolution |
 
 ---
 
-## 2. تصميم جدول `AuditLogs` في النظام التدريبي
+## 2. Table Design & Immutability
+
+The `AuditLogs` table is designed with immutability, high write throughput, and indexing for common compliance queries:
 
 ```sql
 CREATE TABLE AuditLogs
 (
     Id          BIGINT IDENTITY(1,1) NOT NULL,
-    UserId      BIGINT               NULL,         -- معرف المستخدم (NULL لمحاولات الدخول الفاشلة)
+    UserId      BIGINT               NULL,         -- Nullable to accommodate unauthenticated events (e.g., failed logins)
     Action      NVARCHAR(50)         NOT NULL,     -- INSERT, UPDATE, DELETE, LOGIN_SUCCESS, LOGIN_FAILED
     EntityName  NVARCHAR(100)        NOT NULL,     -- Departments, Students, Auth, Users
-    EntityId    NVARCHAR(100)        NULL,         -- المعرف الخاص بالسجل المتأثر
-    Changes     NVARCHAR(MAX)        NULL,         -- تفاصيل التغييرات بصيغة JSON
-    IpAddress   NVARCHAR(50)         NULL,         -- عنوان IP العميل
-    UserAgent   NVARCHAR(255)        NULL,         -- المتصفح أو التطبيق المنفذ
-    IsSuccess   BIT                  DEFAULT 1 NOT NULL, -- حالة نجاح العملية
+    EntityId    NVARCHAR(100)        NULL,         -- Identifier of the affected record
+    Changes     NVARCHAR(MAX)        NULL,         -- JSON payload containing modified fields
+    IpAddress   NVARCHAR(50)         NULL,         -- Client IP address
+    UserAgent   NVARCHAR(255)        NULL,         -- Client browser or integration agent
+    IsSuccess   BIT                  DEFAULT 1 NOT NULL, -- Operational outcome
     CreatedAt   DATETIME             DEFAULT GETDATE() NOT NULL,
 
     CONSTRAINT PK_AuditLogs PRIMARY KEY CLUSTERED (Id)
 );
 ```
 
-### أسباب اختيار هذه الحقول:
-1. **`UserId` (يقبل NULL):** نحتاجه لربط العملية بمرتكبها، وسمحنا بقيم `NULL` لأن بعض العمليات الهامة تحدث قبل اكتمال المصادقة (مثل محاولة تسجيل دخول باسم مستخدم غير مسجل).
-2. **`Action` و `EntityName`:** يتيحان التصفية الفورية لكافة العمليات (مثلاً: استخراج جميع عمليات `DELETE` التي تمت على كيان `Students`).
-3. **`Changes` (JSON خفيف ومحدد):** نسجل الحقول المهمة فقط التي تساعد في استرجاع أو مراجعة ما تم، مع **حظر مطلق** لتسجيل كلمات المرور، أو رموز الـ JWT، أو الـ Hashes الحساسة.
-4. **طبيعة الجدول Append-Only:** لا يحتوي الجدول على أعمدة `UpdatedAt` أو `IsDeleted`، ولا توجد أي Stored Procedure لتعديل أو حذف سجلات التدقيق، لمنع التلاعب بالسجلات حتى من قبل المبرمجين.
+### Architectural Decisions:
+1. **Nullable `UserId`:** Required to trace critical security events that occur prior to identity establishment (such as credential stuffing or brute-force attempts on `/api/auth/login`).
+2. **`Action` and `EntityName` Categorization:** Enables targeted querying (e.g., auditing all `DELETE` actions executed against `Students` within a date range).
+3. **Redacted `Changes` Payloads:** The JSON record includes relevant modified properties while strictly excluding sensitive data such as password hashes, refresh tokens, and encryption secrets.
+4. **Append-Only Immutability:** The table omits `UpdatedAt` and `IsDeleted` columns. No stored procedures or application endpoints exist to edit or remove records from `AuditLogs`.
 
 ---
 
-## 3. ربط سجل التدقيق بالـ Stored Procedures (التدقيق الذري In-Transaction)
+## 3. Atomic In-Transaction Auditing
 
-### القاعدة الذهبية: الذرية (Atomicity) في التدقيق
-ماذا يحدث لو قمنا بتعديل بيانات طالب، ثم تعطل الخادم قبل أن نكتب سجل الـ Audit Log؟  
-النتيجة كارثية: بيانات تغيرت في النظام دون أي أثر للمستخدم الذي غيرها!  
-لذلك، نعتمد أسلوب **In-Transaction Audit**:
-- يتم إدراج سجل الـ Audit داخل نفس الـ Stored Procedure ونفس المعاملة (Transaction) التي تنفذ التغيير.
-- إذا نجحت الإضافة، نجح التدقيق معها حتماً.
-- إذا حدث خطأ أو مخالفة قيود (Constraint Violation)، يتراجع الـ SQL Server عن الإضافة والتدقيق معاً عبر `ROLLBACK`.
+### The Atomicity Guarantee
+Decoupling audit writing from domain data mutations creates a critical consistency risk: if the host application crashes after modifying a student record but before persisting the audit entry, data has mutated without any record of who performed the modification.
 
-### مثال واقعي من كود المشروع (`StudentsInsert`):
+To ensure strict ACID compliance, the system adopts **In-Transaction Database Auditing**:
+- Both the domain modification and the audit record insertion occur within the **same atomic database transaction**.
+- If the domain operation succeeds, the audit log commits simultaneously.
+- If a constraint violation or database failure occurs, both the mutation and the audit insertion are rolled back atomically via `ROLLBACK`.
+
+### Implementation Pattern (`StudentsInsert`):
 ```sql
 CREATE OR ALTER PROCEDURE StudentsInsert
     @FullName     NVARCHAR(150),
@@ -77,13 +80,13 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @NewId BIGINT;
 
-    -- 1. تنفيذ التغيير الأساسي
+    -- 1. Execute domain insertion
     INSERT INTO Students (FullName, StudentCode, Email, PhoneNumber, DepartmentId, Stage, BirthDate, IsDeleted, CreatedBy, CreatedAt)
     VALUES (@FullName, @StudentCode, @Email, @PhoneNumber, @DepartmentId, @Stage, @BirthDate, 0, @CreatedBy, GETDATE());
 
     SET @NewId = SCOPE_IDENTITY();
 
-    -- 2. تسجيل التدقيق في نفس المعاملة فوراً
+    -- 2. Persist audit trail atomically within the same transaction scope
     INSERT INTO AuditLogs (UserId, Action, EntityName, EntityId, Changes, IsSuccess, CreatedAt)
     VALUES (
         @CreatedBy,
@@ -108,33 +111,38 @@ GO
 
 ---
 
-## 4. مصفوفة تدقيق جميع الـ Stored Procedures في المشروع
+## 4. Stored Procedure Auditing Matrix
 
-| اسم الإجراء المخزن | نوع العملية | هل يتم تدقيقه؟ | سبب القرار |
-|-------------------|-------------|----------------|------------|
-| `DepartmentsInsert` | `INSERT` | **نعم (داخل الـ SP)** | عملية تغيير بيانات وإضافة قسم جديد تؤثر على سير الكلية. |
-| `DepartmentsUpdate` | `UPDATE` | **نعم (داخل الـ SP)** | تغيير بيانات القسم أو رمزه يجب توثيقه. |
-| `DepartmentsDelete` | `DELETE` | **نعم (داخل الـ SP)** | الحذف المنطقي لقسم دراسي عملية حرجة أمنياً. |
-| `DepartmentsGetById` | `SELECT` | **لا** | عمليات القراءة الفردية لا تغير الحالة ولا تستهلك مساحة التتبع دون مبرر. |
-| `DepartmentsGetAll` | `SELECT` | **لا** | استعراض الأقسام بنظام الصفحات لا يتطلب حفظ في Audit Log. |
-| `DepartmentsLookup` | `SELECT` | **لا** | قراءة سريعة للقوائم المنسدلة لا تبرر إنشاء ملايين السجلات. |
-| `StudentsInsert` | `INSERT` | **نعم (داخل الـ SP)** | تسجيل طالب جديد في قاعدة البيانات. |
-| `StudentsUpdate` | `UPDATE` | **نعم (داخل الـ SP)** | تعديل بيانات الطالب الشخصية أو مرحلته الدراسية. |
-| `StudentsDelete` | `DELETE` | **نعم (داخل الـ SP)** | حذف طالب منطقياً من النظام. |
-| `StudentsGetById` | `SELECT` | **لا** | قراءة بيانات طالب. |
-| `StudentsGetAll` | `SELECT` | **لا** | بحث وتصفية قائمة الطلاب. |
-| `UsersInsert` | `INSERT` | **نعم (داخل الـ SP)** | إنشاء مستخدم جديد في النظام (يسجل الدور والاسم دون الـ Hash). |
-| `UsersGetByUserName` | `SELECT` | **لا** | فحص حساب المستخدم أثناء تسجيل الدخول. |
-| `AuditLogsInsert` | `INSERT` | **لا (هو نفسه التدقيق)** | إجراء تسجيل التدقيق (لمنع الدوران اللانهائي). |
-| `AuditLogsGetAll` | `SELECT` | **لا** | استعراض السجلات من قبل المدير المسؤول. |
-| **أحداث تسجيل الدخول** | `LOGIN` | **نعم (عبر الـ Service)** | تسجيل `LOGIN_SUCCESS` و `LOGIN_FAILED` لكشف محاولات الاختراق. |
+The table below outlines auditing behavior across all database routines:
+
+| Stored Procedure | Operation | Audited? | Architectural Rationale |
+|---|---|---|---|
+| `DepartmentsInsert` | `INSERT` | **Yes (In-Procedure)** | Department creation modifies academic taxonomy. |
+| `DepartmentsUpdate` | `UPDATE` | **Yes (In-Procedure)** | Code or name modifications alter administrative reference data. |
+| `DepartmentsDelete` | `DELETE` | **Yes (In-Procedure)** | Soft-deletion is a high-impact operation. |
+| `DepartmentsGetById` | `SELECT` | **No** | Read operations do not mutate system state. |
+| `DepartmentsGetAll` | `SELECT` | **No** | Paged queries generate high volume with zero state mutation. |
+| `DepartmentsLookup` | `SELECT` | **No** | Lookup queries for UI dropdowns are read-only. |
+| `StudentsInsert` | `INSERT` | **Yes (In-Procedure)** | Student admission and enrollment records are regulatory. |
+| `StudentsUpdate` | `UPDATE` | **Yes (In-Procedure)** | Academic progress and profile alterations must be tracked. |
+| `StudentsDelete` | `DELETE` | **Yes (In-Procedure)** | Student archival/deletion requires strict accountability. |
+| `StudentsGetById` | `SELECT` | **No** | Read operation. |
+| `StudentsGetAll` | `SELECT` | **No** | Read operation. |
+| `UsersInsert` | `INSERT` | **Yes (In-Procedure)** | User account creation (captures username and role, excludes hash). |
+| `UsersGetByUserName` | `SELECT` | **No** | Identity lookup during authentication. |
+| `AuditLogsInsert` | `INSERT` | **No** | Direct logging procedure (prevents recursive logging loops). |
+| `AuditLogsGetAll` | `SELECT` | **No** | Administrative inspection of audit logs. |
+| **Authentication Events** | `LOGIN` | **Yes (Via Service)** | `LOGIN_SUCCESS` and `LOGIN_FAILED` tracked for intrusion detection. |
 
 ---
 
-## 5. استعراض سجلات التدقيق في الـ API (خاص بالـ Admin)
-- **المسار:** `GET /api/auditlog?pageNumber=1&pageSize=20`
-- **الحماية:** `[Authorize(Roles = "Admin")]` (أي مستخدم برتبة `User` يحصل على `403 Forbidden`).
-- **نموذج الاستجابة:**
+## 5. Audit Log API Endpoint (`Admin Only`)
+
+- **Route:** `GET /api/auditlog`
+- **Authorization:** `[Authorize(Roles = "Admin")]` (Unauthorized or non-admin callers receive `401` or `403`).
+- **Query Parameters:** `pageNumber` (int), `pageSize` (int), `action` (string), `entityName` (string), `userId` (long/sqid).
+
+### Sample Response Payload
 ```json
 {
   "data": [
@@ -144,7 +152,7 @@ GO
       "action": "INSERT",
       "entityName": "Students",
       "entityId": "1",
-      "changes": "{\"FullName\":\"علي أحمد حسن\",\"StudentCode\":\"STU-2026-001\",\"DepartmentId\":1,\"Stage\":3}",
+      "changes": "{\"FullName\":\"John Doe\",\"StudentCode\":\"STU-2026-001\",\"DepartmentId\":1,\"Stage\":3}",
       "ipAddress": null,
       "userAgent": null,
       "isSuccess": true,
@@ -155,7 +163,7 @@ GO
       "userId": null,
       "action": "LOGIN_FAILED",
       "entityName": "Auth",
-      "entityId": "hacker_attempt",
+      "entityId": "unauthorized_user",
       "changes": "{\"Reason\":\"InvalidCredentials\"}",
       "ipAddress": null,
       "userAgent": null,

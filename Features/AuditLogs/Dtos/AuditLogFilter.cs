@@ -2,7 +2,9 @@ using OC_System_Training.Shared.Base.dto;
 
 namespace OC_System_Training.Features.AuditLogs.Dtos;
 
-// تعليق تدريبي: DTO الخاص بتصفية وترقيم سجلات التدقيق والتتبع
+/// <summary>
+/// Filter and pagination criteria for audit log search queries.
+/// </summary>
 public class AuditLogFilter : BaseFilter
 {
     public string? EntityName { get; set; }

@@ -1,7 +1,8 @@
 namespace OC_System_Training.Shared.Base.dto;
 
-// تعليق تدريبي: كائن نتيجة الخدمة (ServiceResult)
-// يوحد مخرجات طبقة الـ Service سواء كانت نجاحاً أو فشلاً مع مفتاح الخطأ
+/// <summary>
+/// Result envelope unifying operational outcomes, payload, pagination metadata, and error codes.
+/// </summary>
 public class ServiceResult<T>
 {
     public T? Data { get; set; }
@@ -14,20 +15,17 @@ public class ServiceResult<T>
     {
     }
 
-    // منشئ النجاح لكائن واحد
     public ServiceResult(T? data)
     {
         Data = data;
     }
 
-    // منشئ النجاح لقائمة مرقمة مع إجمالي السجلات
     public ServiceResult(T? data, int totalCount)
     {
         Data = data;
         TotalCount = totalCount;
     }
 
-    // منشئ الفشل مع مفتاح الخطأ
     public ServiceResult(string? error)
     {
         Error = error;

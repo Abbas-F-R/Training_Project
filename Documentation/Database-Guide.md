@@ -1,44 +1,44 @@
-# دليل قاعدة البيانات (Database Guide)
-### معمارية الميزات، تصميم الجداول، القيود، الفهارس المصفاة، الـ Views والـ Stored Procedures وسجل التدقيق
+# Database Design & Architecture Guide
+### Vertical Slice SQL Organization, Relational Schema, Integrity Constraints, Filtered Indexes, Views, and Stored Procedures
 
 ---
 
-## 1. معمارية ملفات قاعدة البيانات (Feature-Based SQL Architecture)
+## 1. Feature-Based SQL Architecture
 
-تطبيقاً لمعمارية **Vertical Slice**، تم تقسيم ملفات قاعدة البيانات ووضع سكريبتات كل ميزة داخل مجلد الـ Feature المقابل، مع إبقاء الإجراءات المساعدة العامة في الـ Infrastructure:
+In alignment with the **Vertical Slice Architecture**, database scripts are co-located within their corresponding feature directories, while enterprise-wide utility procedures and seed data reside in infrastructure:
 
 ```text
 ├── Infrastructure/Persistence/Sql/
-│   ├── 00_Base_Procedures.sql       <-- الإجراءات المساعدة المشتركة (Base_CheckDuplicate, Base_GetFirst)
-│   └── 01_SeedData.sql              <-- البيانات الأولية التجريبية (الأقسام، الطلاب، والمستخدمين)
+│   ├── 00_Base_Procedures.sql       <-- Shared helper procedures (Base_CheckDuplicate, Base_GetFirst)
+│   └── 01_SeedData.sql              <-- Seed data for bootstrapping (Admin user, departments, students)
 ├── Features/AuditLogs/Sql/
-│   ├── 01_AuditLogs_Tables_Indexes.sql  <-- جدول سجل التدقيق والتتبع وفهارس الأداء
-│   └── 02_AuditLogs_Procedures.sql      <-- إجراءات AuditLogsInsert و AuditLogsGetAll
+│   ├── 01_AuditLogs_Tables_Indexes.sql  <-- AuditLogs table DDL and query performance indexes
+│   └── 02_AuditLogs_Procedures.sql      <-- Stored procedures: AuditLogsInsert and AuditLogsGetAll
 ├── Features/Auth/Sql/
-│   ├── 01_Users_Tables_Constraints_Indexes.sql  <-- جدول المستخدمين والقيود وفهارس الدخول المصفاة
-│   └── 02_Users_Procedures.sql                  <-- إجراءات جلب المستخدم بالاسم وإنشاء مستخدم جديد مع التدقيق
+│   ├── 01_Users_Tables_Constraints_Indexes.sql  <-- Users table DDL, constraints, and filtered indexes
+│   └── 02_Users_Procedures.sql                  <-- Procedures: UsersGetByUserName and UsersInsert
 ├── Features/Departments/Sql/
-│   ├── 01_Departments_Tables_Views_Constraints_Indexes.sql  <-- جدول الأقسام، الـ View، والقيود والفهارس
-│   └── 02_Departments_Procedures.sql                        <-- إجراءات CRUD للأقسام مع التدقيق المدمج والـ Lookup
+│   ├── 01_Departments_Tables_Views_Constraints_Indexes.sql  <-- Departments table, view, constraints, and indexes
+│   └── 02_Departments_Procedures.sql                        <-- CRUD procedures with in-transaction audit logging
 ├── Features/Students/Sql/
-│   ├── 01_Students_Tables_Views_Constraints_Indexes.sql     <-- جدول الطلاب، الـ View، المفتاح الأجنبي والقيود
-│   └── 02_Students_Procedures.sql                           <-- إجراءات CRUD للطلاب مع التدقيق المدمج
+│   ├── 01_Students_Tables_Views_Constraints_Indexes.sql     <-- Students table, view, foreign key, and indexes
+│   └── 02_Students_Procedures.sql                           <-- CRUD procedures with in-transaction audit logging
 └── sql/
-    └── MasterMigration.sql          <-- سكريبت التهيئة الشامل لكامل قاعدة البيانات بالترتيب المترابط
+    └── MasterMigration.sql          <-- Unified execution script ordering all migrations sequentially
 ```
 
 ---
 
-## 2. مخطط الكيانات والعلاقات (ERD)
+## 2. Entity-Relationship Diagram (ERD)
 
-قاعدة بيانات النظام التدريبي (`OC_System_Training_DB`) مبنية وفق أعلى معايير سلامة البيانات والـ Referential Integrity:
+The database schema is designed for strict referential integrity, auditability, and domain constraints:
 
 ```mermaid
 erDiagram
     Departments ||--o{ Students : "FK_Students_Departments"
     Users ||--o{ Students : "CreatedBy / UpdatedBy"
     Users ||--o{ Departments : "CreatedBy / UpdatedBy"
-    Users ||--o{ AuditLogs : "UserId (منفذ العملية)"
+    Users ||--o{ AuditLogs : "UserId (Action Executor)"
 
     AuditLogs {
         bigint Id PK
@@ -94,94 +94,92 @@ erDiagram
 
 ---
 
-## 3. تفاصيل الجداول والقيود (Tables & Constraints)
+## 3. Schema Specifications & Integrity Constraints
 
-### A. جدول سجل التدقيق والتتبع (`AuditLogs`)
-- **Primary Key:** `PK_AuditLogs` (CLUSTERED على `Id`).
-- **طبيعة السجل:** Append-Only غير قابل للتعديل أو الحذف.
-- **الفهارس:**
-  - `IX_AuditLogs_Entity`: فهرس على `(EntityName, EntityId)` لتسريع استخراج سجلات كيان معين.
-  - `IX_AuditLogs_UserId`: فهرس على `(UserId)` لتتبع حركات مستخدم معين.
-  - `IX_AuditLogs_CreatedAt`: فهرس تنازلي على `(CreatedAt DESC)` لعرض أحدث الحركات أولاً.
-  - `IX_AuditLogs_Action`: فهرس على `(Action, IsSuccess)` لمراقبة محاولات الدخول الفاشلة.
+### A. Audit Logging (`AuditLogs`)
+- **Primary Key:** `PK_AuditLogs` (CLUSTERED on `Id`).
+- **Design:** Append-only storage without update or soft-delete indicators.
+- **Indexes:**
+  - `IX_AuditLogs_Entity`: Composite index on `(EntityName, EntityId)` for entity-specific audit queries.
+  - `IX_AuditLogs_UserId`: Index on `(UserId)` for user activity auditing.
+  - `IX_AuditLogs_CreatedAt`: Descending index on `(CreatedAt DESC)` for chronological timeline rendering.
+  - `IX_AuditLogs_Action`: Composite index on `(Action, IsSuccess)` for security and intrusion monitoring.
 
-### B. جدول المستخدمين (`Users`)
-- **Primary Key:** `PK_Users` (CLUSTERED على `Id`).
+### B. User Accounts (`Users`)
+- **Primary Key:** `PK_Users` (CLUSTERED on `Id`).
 - **CHECK Constraints:**
-  - `CK_Users_Role`: التحقق من أن الدور إما `Admin` أو `User` أو `Manager`.
-  - `CK_Users_UserName_Length`: ألا يقل اسم المستخدم عن 3 أحرف.
+  - `CK_Users_Role`: Restricts roles to authorized values (`Admin`, `User`, `Manager`).
+  - `CK_Users_UserName_Length`: Enforces a minimum username length of 3 characters.
 
-### C. جدول الأقسام الدراسية (`Departments`)
-- **Primary Key:** `PK_Departments` (CLUSTERED على `Id`).
+### C. Academic Departments (`Departments`)
+- **Primary Key:** `PK_Departments` (CLUSTERED on `Id`).
 - **CHECK Constraints:**
-  - `CK_Departments_Code`: ألا يقل الرمز عن حرفين وخلوه من المسافات (`Code NOT LIKE '% %'`).
-  - `CK_Departments_Name`: ألا يقل اسم القسم عن 3 أحرف.
+  - `CK_Departments_Code`: Enforces minimum length of 2 characters and prohibits internal whitespace (`Code NOT LIKE '% %'`).
+  - `CK_Departments_Name`: Enforces minimum length of 3 characters.
 
-### D. جدول الطلاب (`Students`)
-- **Primary Key:** `PK_Students` (CLUSTERED على `Id`).
+### D. Students (`Students`)
+- **Primary Key:** `PK_Students` (CLUSTERED on `Id`).
 - **Foreign Key:**
-  - `FK_Students_Departments`: يربط `DepartmentId` بجدول `Departments(Id)` مع منع الحذف العشوائي (`ON DELETE NO ACTION`).
+  - `FK_Students_Departments`: References `Departments(Id)` with `ON DELETE NO ACTION` to prevent orphan cascades.
 - **CHECK Constraints:**
-  - `CK_Students_Stage`: المرحلة الدراسية محصورة بين 1 و 6 (`CHECK (Stage BETWEEN 1 AND 6)`).
-  - `CK_Students_Email`: التحقق من سلامة صيغة البريد الإلكتروني (`CHECK (Email IS NULL OR Email LIKE '%_@__%.__%')`).
-  - `CK_Students_BirthDate`: تاريخ الميلاد لا يمكن أن يكون في المستقبل (`CHECK (BirthDate IS NULL OR BirthDate <= GETDATE())`).
+  - `CK_Students_Stage`: Restricts academic stages to valid bounds (`CHECK (Stage BETWEEN 1 AND 6)`).
+  - `CK_Students_Email`: Validates email address format (`CHECK (Email IS NULL OR Email LIKE '%_@__%.__%')`).
+  - `CK_Students_BirthDate`: Ensures birth dates cannot be in the future (`CHECK (BirthDate IS NULL OR BirthDate <= GETDATE())`).
 
 ---
 
-## 4. استراتيجية الفهارس المصفاة (Filtered Indexing Strategy)
+## 4. Filtered Unique Indexing Strategy
 
-في بيئات العمل التي تعتمد **الحذف المنطقي (Soft Delete)**، استخدام الـ Unique Constraints العادية يسبب مشكلة كبيرة: إذا قمت بحذف طالب بالرقم الجامعي `STU-001` منطقياً، فلن يسمح لك النظام بإعادة استخدام نفس الرقم مستقبلاً.
-لذلك تم تطبيق **الفهارس الفريدة المصفاة (Unique Filtered Indexes)**:
+In systems utilizing **Soft Delete** (`IsDeleted = 1`), traditional unique constraints prevent re-using codes or usernames that belonged to archived records. To solve this without compromising integrity, the database leverages **Filtered Unique Indexes**:
 
-1. **فهرس الرقم الجامعي للطلاب:**
-   ```sql
-   CREATE UNIQUE NONCLUSTERED INDEX UQ_Students_StudentCode_Active
-   ON Students (StudentCode)
-   WHERE IsDeleted = 0;
-   ```
-2. **فهرس رمز القسم:**
-   ```sql
-   CREATE UNIQUE NONCLUSTERED INDEX UQ_Departments_Code_Active
-   ON Departments (Code)
-   WHERE IsDeleted = 0;
-   ```
-3. **فهرس اسم المستخدم:**
-   ```sql
-   CREATE UNIQUE NONCLUSTERED INDEX UQ_Users_UserName_Active
-   ON Users (UserName)
-   WHERE IsDeleted = 0;
-   ```
+```sql
+-- Students unique active code
+CREATE UNIQUE NONCLUSTERED INDEX UQ_Students_StudentCode_Active
+ON Students (StudentCode)
+WHERE IsDeleted = 0;
+
+-- Departments unique active code
+CREATE UNIQUE NONCLUSTERED INDEX UQ_Departments_Code_Active
+ON Departments (Code)
+WHERE IsDeleted = 0;
+
+-- Users unique active username
+CREATE UNIQUE NONCLUSTERED INDEX UQ_Users_UserName_Active
+ON Users (UserName)
+WHERE IsDeleted = 0;
+```
 
 ---
 
-## 5. الـ Views المرافقة
+## 5. Architectural View Layer
 
-### قواعد تصميم الـ Views في OC_System:
-1. يُمنع الاستعلام المباشر من الجداول في استعلامات القراءة أو بعد عمليات الإضافة والتعديل.
-2. يتم توجيه كافة عمليات القراءة إلى `vw_{TableName}`.
-3. تتضمن الـ View شرط `WHERE IsDeleted = 0` لحجب البيانات المحذوفة تلقائياً.
-4. تقوم الـ View بضم الجداول الخارجية لإظهار النصوص بدلاً من مجرد المعرفات الرقمية (مثل `DepartmentName` و `DepartmentCode`).
+Direct table access for read operations is restricted. All queries and post-mutation responses are routed through dedicated database views (`vw_{Entity}`):
+
+1. **Automatic Soft-Delete Filtering:** Views enforce `WHERE IsDeleted = 0` at the database engine level.
+2. **Denormalized Projection:** Foreign key references are joined to project readable descriptors alongside IDs (e.g., `DepartmentName` and `DepartmentCode` in `vw_Students`).
+3. **Consistent Post-Mutation Projections:** Stored procedures return the view projection immediately following an `INSERT` or `UPDATE`, ensuring the client receives fully computed data without additional roundtrips.
 
 ---
 
-## 6. الإجراءات المخزنة والـ Lookup
+## 6. Stored Procedure Architecture
 
-### إجراءات الأقسام:
-- `DepartmentsGetById`: جلب قسم بالمعرف.
-- `DepartmentsGetAll`: استعراض الأقسام بنظام الصفحات (يرجع TotalCount ثم بيانات الصفحة).
-- `DepartmentsLookup`: استرجاع سريع وموجز للأقسام (`Id, Name, Code`) للقوائم المنسدلة بدون ترقيم (بديل NotPaged).
-- `DepartmentsInsert`: إدخال قسم جديد مع تسجيل التدقيق الذري `INSERT INTO AuditLogs` داخل نفس الـ Transaction.
-- `DepartmentsUpdate`: تعديل قسم مع تسجيل التدقيق الذري `UPDATE`.
-- `DepartmentsDelete`: حذف منطقي مع تسجيل التدقيق الذري `DELETE`.
+All data operations are encapsulated in compiled stored procedures:
 
-### إجراءات الطلاب:
-- `StudentsGetById`: جلب طالب بالمعرف.
-- `StudentsGetAll`: بحث وترقيم الطلاب.
-- `StudentsInsert`: إضافة طالب مع تسجيل التدقيق الذري `INSERT INTO AuditLogs`.
-- `StudentsUpdate`: تعديل طالب مع تسجيل التدقيق الذري `UPDATE`.
-- `StudentsDelete`: حذف منطقي مع تسجيل التدقيق الذري `DELETE`.
-*(ملاحظة: تم حذف إجراء `StudentsGetAllNotPaged` نهائياً لعدم وجود حاجة وظيفية له في النظام التدريبي)*.
+### Department Routines
+- `DepartmentsGetById`: Fetches a single active department by primary key.
+- `DepartmentsGetAll`: Paged query returning metadata (`TotalCount`) and the requested page slice.
+- `DepartmentsLookup`: Lightweight unpaged query (`Id`, `Name`, `Code`) designed for UI select dropdowns.
+- `DepartmentsInsert`: Inserts department and writes atomic `INSERT` audit log.
+- `DepartmentsUpdate`: Modifies department and writes atomic `UPDATE` audit log.
+- `DepartmentsDelete`: Soft-deletes department (`IsDeleted = 1`) and writes atomic `DELETE` audit log.
 
-### إجراءات سجل التدقيق:
-- `AuditLogsInsert`: إضافة سجل تدقيق (تستخدمها الخدمات لأحداث الدخول).
-- `AuditLogsGetAll`: استعراض السجلات بنظام الصفحات مع الفلترة للمسؤول Admin.
+### Student Routines
+- `StudentsGetById`: Fetches student profile joined with department details via `vw_Students`.
+- `StudentsGetAll`: Search and paged query supporting filtering by name, code, stage, and department.
+- `StudentsInsert`: Inserts student record and writes atomic `INSERT` audit log.
+- `StudentsUpdate`: Modifies student profile and writes atomic `UPDATE` audit log.
+- `StudentsDelete`: Soft-deletes student record and writes atomic `DELETE` audit log.
+
+### Audit Log Routines
+- `AuditLogsInsert`: Procedure used by application services for security events (login success/failure).
+- `AuditLogsGetAll`: Administrative paged query with filtering by action, entity, user, and date range.

@@ -3,9 +3,9 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Shared.Base;
 
-// تعليق تدريبي: واجهة وكلاس المستخدم الحالي (CurrentUser)
-// تتيح لأي كلاس أو خدمة حقن ICurrentUser للوصول لمعلومات المستخدم المتصل (من واقع الـ JWT Token)
-// دون الحاجة لتمرير HttpContext يدوياً أو قراءة الـ Claims في كل مكان
+/// <summary>
+/// Exposes security claims and identity details of the currently authenticated user.
+/// </summary>
 public interface ICurrentUser
 {
     bool IsAuthenticated { get; }
@@ -16,6 +16,9 @@ public interface ICurrentUser
     string Lang { get; }
 }
 
+/// <summary>
+/// Scoped resolution of user claims from the active HttpContext.
+/// </summary>
 [Scoped]
 public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUser
 {
@@ -36,7 +39,7 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
     public string UserName => GetClaim("UserName") ?? GetClaim(ClaimTypes.Name) ?? string.Empty;
     public string FullName => GetClaim("FullName") ?? UserName;
     public string Role => GetClaim(ClaimTypes.Role) ?? GetClaim("Role") ?? "User";
-    public string Lang => GetClaim("Lang") ?? "ar";
+    public string Lang => GetClaim("Lang") ?? "en";
 
     private string? GetClaim(string claimType)
     {

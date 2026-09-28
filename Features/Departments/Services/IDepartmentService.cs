@@ -4,7 +4,9 @@ using OC_System_Training.Shared.Base.dto;
 
 namespace OC_System_Training.Features.Departments.Services;
 
-// تعليق تدريبي: واجهة خدمة الأقسام الدراسية (IDepartmentService)
+/// <summary>
+/// Service contract for department business operations and lookup functionality.
+/// </summary>
 public interface IDepartmentService : IBaseService<DepartmentResponse, DepartmentForm, DepartmentUpdate, DepartmentFilter>
 {
     Task<ServiceResult<List<DepartmentResponse>>> Lookup();

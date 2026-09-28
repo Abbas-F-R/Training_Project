@@ -1,79 +1,84 @@
-# دليل التحقق من الهوية والمصادقة (Authentication Guide)
-### إدارة الجلسات، رموز JWT، التحقق من الحسابات، وتدقيق أحداث تسجيل الدخول
+# Authentication & Identity Guide
+
+### Session Management, JWT Tokens, BCrypt Security, and Audit Verification
 
 ---
 
-## 1. ما معنى Authentication؟
-المصادقة (**Authentication**) هي العملية التي يتحقق بها النظام من هوية الطرف الذي يطلب الاتصال (سواء كان مستخدماً بشرياً أو خادماً آخر)، للإجابة على سؤال واحد فقط: **"من أنت؟"**.
+## 1. Authentication Concept & Principles
 
-### الفرق بين Authentication و Authorization:
-- **Authentication (من أنت؟):** إثبات الهوية (مثل إدخال اسم المستخدم وكلمة المرور وتأكيد صحتهما).
-- **Authorization (ماذا يحق لك أن تفعل؟):** التحقق من الصلاحيات الممنوحة للشخص بعد التأكد من هويته (مثل: هل يحق لهذا المستخدم حذف قسم دراسي؟).
+**Authentication** is the mechanism by which the system establishes the digital identity of an incoming request, answering the fundamental question: **"Who are you?"**
+
+### Authentication vs. Authorization:
+- **Authentication ("Who are you?"):** Proving identity (e.g., submitting valid username and password credentials).
+- **Authorization ("What are you allowed to do?"):** Evaluating whether the authenticated identity possesses the necessary rights to perform a specific action (e.g., can this user delete a department?).
 
 > [!NOTE]
-> امتلاك المستخدم لـ Token صحيح يعني فقط أن النظام **تعرّف عليه بنجاح**؛ ولا يعني مطلقاً أنه يملك حق تنفيذ كل عملية.
+> A valid JWT token confirms identity; it does not grant unrestricted access to every resource. Permissions are enforced independently by authorization policies.
 
 ---
 
-## 2. ما الفرق بين عملية تسجيل الدخول (Login) وتوكن الـ JWT؟
+## 2. Login Flow & JWT Architecture
 
-1. **عملية الـ Login:** هي مرحلة فحص بيانات الاعتماد لمرة واحدة:
-   - يتلقى الخادم `UserName` و `Password`.
-   - يقوم بتشفير كلمة المرور المدخلة عبر **BCrypt** ومقارنة الـ Hash بالمسجل في قاعدة البيانات.
-   - إذا تطابقت، يتم إنشاء رمز مميز موقع رقمياً (**JWT Token**) يحمل بيانات المستخدم المشفرة.
-2. **رمز الـ JWT (JSON Web Token):**
-   - هو جواز سفر رقمي مشفر موقع بمفتاح سري (`SecretKey`).
-   - يتكون من 3 أجزاء مفصولة بنقاط: `Header.Payload.Signature`
-   - يتم إرساله للعميل، ويقوم العميل بإرفاقه مع كل طلب لاحق في الـ Header:
-     `Authorization: Bearer <TOKEN>`
+1. **Authentication Process:**
+   - Client sends credentials (`UserName` and `Password`) to `POST /api/auth/login`.
+   - The application fetches user metadata from the database via `UsersGetByUserName`.
+   - Password authenticity is verified using **BCrypt** with salted comparison.
+   - If valid, a cryptographically signed **JSON Web Token (JWT)** is generated and returned.
+2. **JWT Anatomy:**
+   - Standard 3-part structure: `Header.Payload.Signature`.
+   - Signed using HMAC SHA-256 with a secure 256-bit symmetric secret key.
+   - Attached to subsequent HTTP requests in the `Authorization` header:
+     ```http
+     Authorization: Bearer <JWT_TOKEN>
+     ```
 
 ---
 
-## 3. دور الـ Claims وكيف يعرف النظام المستخدم الحالي (`CurrentUser`)؟
+## 3. Claims Structure & `CurrentUser` Resolution
 
-الـ **Claims** هي بطاقة تعريفية مدمجة داخل الـ Payload الخاص بالتوكن. في مشروعنا التدريبي، نضمن الـ Claims التالية في كل توكن:
-- `UserId`: المعرف الرقمي للمستخدم.
-- `UserName`: اسم المستخدم المسجل.
-- `FullName`: الاسم الكامل للمستخدم.
-- `Role`: رتبة المستخدم (`Admin` أو `User`).
-- `Lang`: لغة الواجهة المفضلة للمستخدم (`ar`).
+The JWT payload contains standardized identity claims:
+- `UserId`: Numeric identifier of the user (extracted by middleware).
+- `UserName`: Unique account username.
+- `FullName`: Display name of the user.
+- `Role`: Security role assigned to the user (`Admin` or `User`).
+- `Lang`: Preferred client interface language (`en` / `ar`).
 
-### كيف يستخرج النظام هوية المستخدم؟
-1. يقوم `Microsoft.AspNetCore.Authentication.JwtBearer` بالتحقق من صحة توقيع التوكن وتاريخ انتهاء صلاحيته.
-2. يتولى [`UserContextMiddleware.cs`](../Infrastructure/Middleware/UserContextMiddleware.cs) التأكد من أن التوكن يحمل فعلياً معرف المستخدم `UserId`؛ فإذا كان التوكن تالفاً أو لا يحمل المعرف، يرفض الطلب فوراً بحالة `401 Unauthorized`.
-3. يتوفر كائن [`CurrentUser`](../Shared/Base/CurrentUser.cs) (المحقون كـ `[Scoped]`) لأي خدمة أو متحكم عبر الواجهة `ICurrentUser`، ويتيح قراءة بيانات المستخدم الحالي بأمان دون الحاجة لتمرير `HttpContext` بين الطبقات.
+### Identity Extraction Pipeline:
+1. `Microsoft.AspNetCore.Authentication.JwtBearer` validates the cryptographic signature and token expiry.
+2. [`UserContextMiddleware.cs`](../Infrastructure/Middleware/UserContextMiddleware.cs) ensures the validated token contains a non-empty `UserId` claim, immediately rejecting malformed tokens with `401 Unauthorized`.
+3. The scoped [`CurrentUser`](../Shared/Base/CurrentUser.cs) service resolves claims seamlessly for controllers and services without requiring direct coupling to `HttpContext`.
 
 ```csharp
-// مثال في أي مكان في الكود:
 public class StudentService(IRepositoryWrapper wrapper, ICurrentUser currentUser)
 {
-    // currentUser.UserId -> يعطي معرف المستخدم الحالي المستخرج بأمان من التوكن
-    // currentUser.Role   -> يعطي رتبة المستخدم (Admin / User)
+    // Access strongly-typed user claims directly
+    var actingUserId = currentUser.UserId;
+    var actingUserRole = currentUser.Role;
 }
 ```
 
 ---
 
-## 4. التعامل مع الحسابات المعطلة ومحاولات الاختراق
+## 4. Inactive Account Handling & Brute-Force Defense
 
-في قاعدة البيانات، يحتوي جدول `Users` على عمود `IsActive BIT`.
-- إذا حاول مستخدم مسجل لكن حسابه معطل (`IsActive = 0`) تسجيل الدخول:
-  1. تكتشف خدمة `AuthService` أن `!user.IsActive`.
-  2. يتم تسجيل محاولة الدخول الفاشلة في سجل التدقيق: `LOGIN_FAILED` مع سبب `UserInactive`.
-  3. يتم إرجاع رسالة خطأ واضحة: `"حساب المستخدم معطل حالياً، يرجى مراجعة المسؤول."`
-- إذا أدخل المهاجم اسم مستخدم غير موجود أو كلمة مرور خاطئة:
-  1. يرجع النظام رسالة موحدة ومحايدة: `"اسم المستخدم أو كلمة المرور غير صحيحة."` لمنع هجمات حصر أسماء المستخدمين (User Enumeration Attacks).
-  2. يسجل النظام في `AuditLogs` حدث `LOGIN_FAILED` مع اسم المستخدم المستهدف وحالة الفشل `IsSuccess = 0`.
-  3. **قاعدة حاسمة:** لا نقوم بتسجيل كلمة المرور الخاطئة المدخلة نهائياً في سجل التدقيق؛ لأن المستخدمين كثيراً ما يخطئون بإدخال كلمات مرور حساباتهم الأخرى.
+The `Users` table maintains an `IsActive BIT` status column:
+- **Disabled Accounts (`IsActive = 0`):**
+  1. `AuthService` halts authentication immediately upon discovering an inactive flag.
+  2. The failure is recorded in `AuditLogs` as `LOGIN_FAILED` with reason `UserInactive`.
+  3. Returns a distinct error: `UserInactive` ("User account is currently disabled.").
+- **Defense Against Username Enumeration:**
+  1. Incorrect passwords or non-existent usernames both return a uniform message: `InvalidCredentials` ("Invalid username or password.").
+  2. Prevents malicious actors from discovering valid usernames through differential error responses.
+  3. **Security Invariant:** Erroneous password attempts are never logged into `AuditLogs` to prevent accidental credential leakage.
 
 ---
 
-## 5. تسلسل الطلب العملي من تسجيل الدخول إلى Endpoint محمي
+## 5. End-to-End Authentication Sequence
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Client as المتصفح / العميل
+    actor Client as Client / Browser
     participant API as AuthController
     participant AuthSvc as AuthService
     participant Hash as BCrypt Hasher
@@ -85,55 +90,57 @@ sequenceDiagram
     AuthSvc->>DB: UsersGetByUserName("admin")
     DB-->>AuthSvc: User Record (Id, PasswordHash, Role, IsActive)
     AuthSvc->>Hash: Verify(Password, PasswordHash)
-    Hash-->>AuthSvc: True (صحيحة)
+    Hash-->>AuthSvc: True (Match)
     AuthSvc->>Audit: LogAsync(UserId, "LOGIN_SUCCESS", "Auth", "admin")
     Audit->>DB: AuditLogsInsert (...)
     AuthSvc->>AuthSvc: GenerateJwtToken(user)
     AuthSvc-->>API: LoginResponse (Token, Expiration, Role)
     API-->>Client: 200 OK + JWT Token
 
-    Note over Client, DB: بعد الحصول على التوكن (الوصول لـ Endpoint محمي)
+    Note over Client, DB: Subsequent Authenticated Request
 
     Client->>API: GET /api/student (Header: Bearer <TOKEN>)
-    API->>API: التحقق من التوقيع والصلاحية (JwtBearer Handler)
-    API->>API: فحص وجود UserId (UserContextMiddleware)
-    API-->>Client: 200 OK (بيانات الطلاب)
+    API->>API: Validate Token Signature & Expiry (JwtBearer)
+    API->>API: Verify UserId Claim (UserContextMiddleware)
+    API-->>Client: 200 OK (Paginated Student Response)
 ```
 
 ---
 
-## 6. نماذج الاختبار الميداني للـ Authentication
+## 6. Sample Request & Response Payloads
 
-### طلب تسجيل الدخول الناجح:
-- **POST** `/api/auth/login`
+### Successful Login Request:
+`POST /api/auth/login`
 ```json
 {
   "userName": "admin",
   "password": "Admin@12345"
 }
 ```
-- **الاستجابة (200 OK):**
+
+### Successful Login Response (200 OK):
 ```json
 {
   "userId": "UkLWZg9D",
   "userName": "admin",
-  "fullName": "مدير النظام التدريبي",
+  "fullName": "System Administrator",
   "role": "Admin",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiresAt": "2026-09-30T21:00:00Z"
+  "expiresAt": "2026-10-05T12:00:00Z"
 }
 ```
 
-### استعلام بيانات الحساب الحالي (Me Endpoint):
-- **GET** `/api/auth/me` (مع تمرير التوكن في الـ Header)
-- **الاستجابة (200 OK):**
+### User Identity Endpoint (Me):
+`GET /api/auth/me` *(with Bearer Token header)*
+
+**Response (200 OK):**
 ```json
 {
   "userId": "UkLWZg9D",
   "userName": "admin",
-  "fullName": "مدير النظام التدريبي",
+  "fullName": "System Administrator",
   "role": "Admin",
-  "lang": "ar",
+  "lang": "en",
   "isAuthenticated": true
 }
 ```

@@ -1,12 +1,12 @@
 -- ============================================================================
 -- sql/MasterMigration.sql
--- سكريبت التهيئة الشامل لقاعدة البيانات (Master Migration Script)
--- يجمع كافة السكريبتات الموزعة على مستوى الميزات (Feature-Based SQL) بالترتيب الصحيح:
--- 1. Infrastructure: الإجراءات الأساسية المشتركة وجدول وسجلات التدقيق (AuditLogs)
--- 2. Auth: جدول المستخدمين والقيود والفهارس وإجراءات المصادقة
--- 3. Departments: جدول الأقسام والـ View والقيود والفهارس وإجراءات الـ CRUD مع التدقيق المدمج
--- 4. Students: جدول الطلاب والـ View والقيود والفهارس وإجراءات الـ CRUD مع التدقيق المدمج
--- 5. Seed Data: البيانات الأولية التجريبية
+-- Master Database Migration Script
+-- Consolidates all feature-based database scripts in execution order:
+-- 1. Infrastructure: Core shared procedures and AuditLogs table
+-- 2. Auth: Users table, indexes, constraints, and authentication procedures
+-- 3. Departments: Departments table, view, constraints, and CRUD procedures with atomic auditing
+-- 4. Students: Students table, view, constraints, and CRUD procedures with atomic auditing
+-- 5. Seed Data: Default departments, users, and students
 -- ============================================================================
 
 -- إنشاء قاعدة البيانات إذا لم تكن موجودة

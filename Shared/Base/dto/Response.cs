@@ -1,7 +1,8 @@
 namespace OC_System_Training.Shared.Base.dto;
 
-// تعليق تدريبي: غلاف الاستجابة الموحد للقوائم المرقمة (Paged Lists)
-// يوفر للـ Frontend بيانات الصفحة وإجمالي السجلات وعدد الصفحات
+/// <summary>
+/// Standardized paginated response envelope providing metadata for consumer clients.
+/// </summary>
 public class Response<T>
 {
     public List<T> Data { get; set; }

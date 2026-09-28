@@ -6,9 +6,10 @@ using OC_System_Training.Shared.Constants;
 
 namespace OC_System_Training.Features.Students.Services;
 
-// تعليق تدريبي: تطبيق خدمة الطلاب (StudentService)
-// يستعرض استخدام IRepositoryWrapper للوصول إلى أكثر من Repository (الطلاب والأقسام معاً)
-// للتحقق من وجود القسم الدراسي وفحص عدم تكرار الرقم الجامعي للطالب
+/// <summary>
+/// Student service orchestrating student business logic, department foreign-key validation,
+/// student code uniqueness checks, and repository interactions.
+/// </summary>
 [Scoped]
 public class StudentService(IRepositoryWrapper wrapper) : IStudentService
 {
@@ -28,16 +29,16 @@ public class StudentService(IRepositoryWrapper wrapper) : IStudentService
 
     public async Task<ServiceResult<StudentResponse>> Add(ServiceRequest<StudentForm> request)
     {
-        // 1. التحقق من وجود القسم الدراسي المحدد
+        // 1. Verify existence of the referenced department
         var department = await wrapper.Department.Get(request.Dto.DepartmentId);
         if (department == null)
             return ServiceResult<StudentResponse>.Failure(Messages.DepartmentNotFound);
 
-        // 2. التحقق من عدم تكرار الرقم الجامعي
+        // 2. Enforce student code uniqueness
         if (await wrapper.Student.IsDuplicateAsync("StudentCode", request.Dto.StudentCode))
             return ServiceResult<StudentResponse>.Failure(Messages.DuplicateStudentCode);
 
-        // 3. تنفيذ الإضافة وتمرير UserId للتدقيق
+        // 3. Persist student and record user identity in audit log
         var created = await wrapper.Student.Add(request.Dto, request.UserId);
         return created != null
             ? ServiceResult<StudentResponse>.Ok(created)
@@ -46,16 +47,16 @@ public class StudentService(IRepositoryWrapper wrapper) : IStudentService
 
     public async Task<ServiceResult<StudentResponse>> Update(long id, ServiceRequest<StudentUpdate> request)
     {
-        // 1. التحقق من وجود القسم الدراسي
+        // 1. Verify existence of the referenced department
         var department = await wrapper.Department.Get(request.Dto.DepartmentId);
         if (department == null)
             return ServiceResult<StudentResponse>.Failure(Messages.DepartmentNotFound);
 
-        // 2. التحقق من عدم تكرار الرقم الجامعي مع استثناء السجل الحالي
+        // 2. Enforce student code uniqueness excluding current record
         if (await wrapper.Student.IsDuplicateAsync("StudentCode", request.Dto.StudentCode, excludeId: id))
             return ServiceResult<StudentResponse>.Failure(Messages.DuplicateStudentCode);
 
-        // 3. تنفيذ التعديل
+        // 3. Update student details
         var updated = await wrapper.Student.Update(id, request.Dto, request.UserId);
         return updated != null
             ? ServiceResult<StudentResponse>.Ok(updated)

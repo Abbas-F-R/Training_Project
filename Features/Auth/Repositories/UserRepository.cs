@@ -6,7 +6,9 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Features.Auth.Repositories;
 
-// تعليق تدريبي: تطبيق مستودع المستخدمين باستخدام Dapper والإجراءات المخزنة
+/// <summary>
+/// User repository implementation using Dapper and Stored Procedures.
+/// </summary>
 [Scoped]
 public class UserRepository(DapperContext context) : IUserRepository
 {

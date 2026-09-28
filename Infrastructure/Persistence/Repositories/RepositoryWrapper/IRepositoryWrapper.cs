@@ -5,8 +5,9 @@ using OC_System_Training.Features.Students.Repositories;
 
 namespace OC_System_Training.Infrastructure.Persistence.Repositories.RepositoryWrapper;
 
-// تعليق تدريبي: غلاف الـ Repositories الموحد (IRepositoryWrapper)
-// يجمع كافة الـ Repositories في مكان واحد لمنح الـ Services وصولاً مركزياً لها
+/// <summary>
+/// Aggregates all domain repositories to provide unified transactional and cross-feature data access.
+/// </summary>
 public interface IRepositoryWrapper
 {
     IDepartmentRepository Department { get; }

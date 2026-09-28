@@ -3,28 +3,30 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Features.Students.Dtos;
 
-// تعليق تدريبي: DTO الخاص بتعديل بيانات طالب موجود (PUT)
+/// <summary>
+/// Data transfer object for updating an existing student profile.
+/// </summary>
 public class StudentUpdate
 {
-    [Required(ErrorMessage = "اسم الطالب الكامل مطلوب.")]
-    [StringLength(150, ErrorMessage = "اسم الطالب لا يتجاوز 150 حرفاً.")]
+    [Required(ErrorMessage = "Student full name is required.")]
+    [StringLength(150, ErrorMessage = "Student full name cannot exceed 150 characters.")]
     public string FullName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "الرقم الجامعي مطلوب.")]
-    [StringLength(50, ErrorMessage = "الرقم الجامعي لا يتجاوز 50 حرفاً.")]
+    [Required(ErrorMessage = "Student code is required.")]
+    [StringLength(50, ErrorMessage = "Student code cannot exceed 50 characters.")]
     public string StudentCode { get; set; } = string.Empty;
 
-    [EmailAddress(ErrorMessage = "البريد الإلكتروني غير صالح.")]
+    [EmailAddress(ErrorMessage = "Invalid email address.")]
     public string? Email { get; set; }
 
-    [Phone(ErrorMessage = "رقم الهاتف غير صالح.")]
+    [Phone(ErrorMessage = "Invalid phone number.")]
     public string? PhoneNumber { get; set; }
 
-    [Required(ErrorMessage = "يجب تحديد القسم الدراسي.")]
+    [Required(ErrorMessage = "Department is required.")]
     [Sqid]
     public long DepartmentId { get; set; }
 
-    [Range(1, 6, ErrorMessage = "المرحلة الدراسية يجب أن تكون بين 1 و 6.")]
+    [Range(1, 6, ErrorMessage = "Academic stage must be between 1 and 6.")]
     public int Stage { get; set; } = 1;
 
     public DateTime? BirthDate { get; set; }

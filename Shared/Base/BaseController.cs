@@ -2,11 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace OC_System_Training.Shared.Base;
 
-// تعليق تدريبي: المتحكم الأساسي (BaseController)
-// يرث من ControllerBase ويوفر دوال مساعدة لجميع المتحكمات في النظام:
-// 1. استخراج هوية المستخدم الحالي من ICurrentUser
-// 2. إنشاء ServiceRequest موحد يدمج مدخلات العميل مع هوية المستخدم المنفذ
-// 3. توحيد الاستجابات (Ok / BadRequest) وترجمة رسائل الخطأ تلقائياً للغة المطلوبة
+/// <summary>
+/// Foundation controller providing user identity context extraction, request building,
+/// and standardized response envelope formatting with automatic error translation.
+/// </summary>
 [ApiController]
 public abstract class BaseController : ControllerBase
 {
@@ -19,13 +18,13 @@ public abstract class BaseController : ControllerBase
     protected string Lang => CurrentUser.Lang;
 
     /// <summary>
-    /// دمج الـ DTO مع هوية المستخدم الحالي لإنشاء ServiceRequest
+    /// Constructs a standardized ServiceRequest combining input DTO with user security context.
     /// </summary>
     protected ServiceRequest<T> CreateServiceRequest<T>(T dto) =>
         new(dto, Id, UserName, Role, Lang);
 
     /// <summary>
-    /// معالجة استجابة كائن مفرد: يُرجع 200 OK مع البيانات أو 400 BadRequest مع رسالة الخطأ المترجمة
+    /// Processes a single-item ServiceResult into 200 OK or 400 BadRequest with localized error message.
     /// </summary>
     protected ObjectResult Ok<T>(ServiceResult<T> result)
     {
@@ -36,7 +35,7 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
-    /// معالجة استجابة القوائم: يُغلف القائمة داخل كائن Response<T> الموحد الذي يشمل Pagination Metadata
+    /// Processes a paginated ServiceResult into a standardized Response envelope including metadata.
     /// </summary>
     protected ObjectResult Ok<T>(ServiceResult<List<T>> result, int pageNumber = 1, int pageSize = 10)
     {

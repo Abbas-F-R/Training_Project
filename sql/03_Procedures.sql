@@ -1,8 +1,7 @@
 -- ============================================================================
 -- 03_Procedures.sql
--- مشروع OC_System التدريبي (نظام إدارة الطلاب - Student Management System)
--- إنشاء الـ Stored Procedures لجميع العمليات وفق نمط OC_System المعتمد
--- يشمل: التدقيق الذري المدمج (In-Transaction Audit)، استعلام Lookup، واستبعاد NoPaged
+-- Student Management System Stored Procedures
+-- High-Performance CRUD Operations with Atomic In-Transaction Auditing
 -- ============================================================================
 
 USE [OC_System_Training_DB];

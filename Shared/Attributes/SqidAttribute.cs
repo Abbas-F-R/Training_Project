@@ -1,10 +1,7 @@
 namespace OC_System_Training.Shared.Attributes;
 
-// تعليق تدريبي: يوضع هذا الـ Attribute على معرّفات الـ Id (من نوع long)
-// لتشفيرها عند الإرسال للـ Client وفك تشفيرها تلقائياً عند استقبال الطلب
-
 /// <summary>
-/// وسم الخاصية ليتم تشفيرها وفك تشفيرها تلقائياً باستخدام خوارزمية Sqids
+/// Marks a numeric primary key or foreign key property for automatic Sqids URL-safe encoding and decoding.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
 public class SqidAttribute : Attribute

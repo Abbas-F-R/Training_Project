@@ -6,8 +6,9 @@ using OC_System_Training.Shared.Constants;
 
 namespace OC_System_Training.Features.Departments.Services;
 
-// تعليق تدريبي: تطبيق خدمة الأقسام الدراسية (DepartmentService)
-// تدير منطق العمل وفحص التكرار وترجع النتائج مغلفة بـ ServiceResult
+/// <summary>
+/// Department service managing department business operations, code uniqueness validation, and lookup retrieval.
+/// </summary>
 [Scoped]
 public class DepartmentService(IDepartmentRepository repository) : IDepartmentService
 {
@@ -33,7 +34,7 @@ public class DepartmentService(IDepartmentRepository repository) : IDepartmentSe
 
     public async Task<ServiceResult<DepartmentResponse>> Add(ServiceRequest<DepartmentForm> request)
     {
-        // فحص عدم تكرار رمز القسم (Code)
+        // Enforce uniqueness of department code
         if (await repository.IsDuplicateAsync("Code", request.Dto.Code))
             return ServiceResult<DepartmentResponse>.Failure(Messages.DuplicateDepartmentCode);
 
@@ -45,7 +46,7 @@ public class DepartmentService(IDepartmentRepository repository) : IDepartmentSe
 
     public async Task<ServiceResult<DepartmentResponse>> Update(long id, ServiceRequest<DepartmentUpdate> request)
     {
-        // فحص عدم تكرار رمز القسم مع استثناء السجل الحالي
+        // Enforce uniqueness of department code excluding current record
         if (await repository.IsDuplicateAsync("Code", request.Dto.Code, excludeId: id))
             return ServiceResult<DepartmentResponse>.Failure(Messages.DuplicateDepartmentCode);
 

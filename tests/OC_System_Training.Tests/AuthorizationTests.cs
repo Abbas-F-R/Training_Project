@@ -15,7 +15,7 @@ namespace OC_System_Training.Tests;
 
 public class AuthorizationTests
 {
-    [Fact(DisplayName = "1. التحقق من حصر عمليات الحذف والتعديل والإضافة في الأقسام على رتبة Admin")]
+    [Fact(DisplayName = "DepartmentController write endpoints require Admin role authorization")]
     public void DepartmentController_WriteEndpoints_RequireAdminRole()
     {
         var controllerType = typeof(DepartmentController);
@@ -38,7 +38,7 @@ public class AuthorizationTests
         deleteAuth!.Roles.Should().Be("Admin");
     }
 
-    [Fact(DisplayName = "2. التحقق من حصر حذف الطلاب على رتبة Admin فقط")]
+    [Fact(DisplayName = "StudentController delete endpoint requires Admin role authorization")]
     public void StudentController_DeleteEndpoint_RequiresAdminRole()
     {
         var controllerType = typeof(StudentController);
@@ -50,7 +50,7 @@ public class AuthorizationTests
         deleteAuth!.Roles.Should().Be("Admin");
     }
 
-    [Fact(DisplayName = "3. التحقق من حصر استعراض سجلات التدقيق AuditLogController بالكامل على Admin")]
+    [Fact(DisplayName = "AuditLogController class level requires Admin role authorization")]
     public void AuditLogController_RequiresAdminRole()
     {
         var controllerType = typeof(AuditLogController);
@@ -60,7 +60,7 @@ public class AuthorizationTests
         classAuth!.Roles.Should().Be("Admin");
     }
 
-    [Fact(DisplayName = "4. التحقق من حصر إنشاء حساب جديد Register على رتبة Admin فقط")]
+    [Fact(DisplayName = "AuthController register endpoint requires Admin role authorization")]
     public void AuthController_RegisterEndpoint_RequiresAdminRole()
     {
         var controllerType = typeof(AuthController);
@@ -72,12 +72,12 @@ public class AuthorizationTests
         authAttr!.Roles.Should().Be("Admin");
     }
 
-    [Fact(DisplayName = "5. وسيط سياق المستخدم UserContextMiddleware يرفض الطلب 401 إذا خلا التوكن من UserId")]
+    [Fact(DisplayName = "UserContextMiddleware returns 401 Unauthorized if authenticated token lacks UserId claim")]
     public async Task UserContextMiddleware_WithoutUserIdClaim_Returns401()
     {
         // Arrange
         var context = new DefaultHttpContext();
-        var claims = new List<Claim> { new(ClaimTypes.Name, "user_without_id") }; // بدون UserId
+        var claims = new List<Claim> { new(ClaimTypes.Name, "user_without_id") };
         context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
 
         var middleware = new UserContextMiddleware(

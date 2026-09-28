@@ -2,9 +2,9 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Features.Students.Dtos;
 
-// تعليق تدريبي: DTO الخاص بمخرجات بيانات الطالب (Response)
-// يحتوي على بيانات الطالب مع اسم ورمز القسم المجلوبة عبر View (vw_Students)
-// تستخدم [Sqid] على المعرفات الرقمية لحمايتها
+/// <summary>
+/// Data transfer object representing student details with joined department metadata and obfuscated Sqid identifiers.
+/// </summary>
 public class StudentResponse
 {
     [Sqid]

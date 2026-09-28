@@ -1,6 +1,8 @@
 namespace OC_System_Training.Shared.Enums;
 
-// تعليق تدريبي: تحديد اللغات المدعومة لرسائل النظام
+/// <summary>
+/// Supported message localization languages.
+/// </summary>
 public enum LanguageType
 {
     Ar,

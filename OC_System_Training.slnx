@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/OC_System_Training.Tests/OC_System_Training.Tests.csproj" />
+  </Folder>
+  <Project Path="OC_System_Training.csproj" />
+</Solution>

@@ -1,11 +1,7 @@
 namespace OC_System_Training.Shared.Attributes;
 
-// تعليق تدريبي: هذه الـ Attributes تستخدم مع مكتبة Scrutor
-// للحقن التلقائي للتبعيات (Auto-DI) دون الحاجة لتسجيل كل كلاس يدوياً في Program.cs
-
 /// <summary>
-/// تسجيل الكلاس كـ Scoped (يُنشأ كائن واحد لكل HTTP Request)
-/// يُستخدم عادة للخدمات (Services) والـ Repositories
+/// Registers the decorated class with Scoped lifetime via Scrutor assembly scanning.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public class ScopedAttribute : Attribute
@@ -13,7 +9,7 @@ public class ScopedAttribute : Attribute
 }
 
 /// <summary>
-/// تسجيل الكلاس كـ Transient (يُنشأ كائن جديد في كل مرة يُطلب فيها)
+/// Registers the decorated class with Transient lifetime via Scrutor assembly scanning.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public class TransientAttribute : Attribute
@@ -21,7 +17,7 @@ public class TransientAttribute : Attribute
 }
 
 /// <summary>
-/// تسجيل الكلاس كـ Singleton (يُنشأ كائن واحد فقط على مستوى التطبيق بالكامل)
+/// Registers the decorated class with Singleton lifetime via Scrutor assembly scanning.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public class SingletonAttribute : Attribute

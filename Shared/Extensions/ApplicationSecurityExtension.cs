@@ -6,22 +6,21 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace OC_System_Training.Shared.Extensions;
 
-// تعليق تدريبي: امتداد الأمان والمصادقة (ApplicationSecurityExtension)
-// مسؤول عن:
-// 1. إعداد مصادقة JWT Bearer Token وقراءة المفتاح السري من appsettings.json
-// 2. إعداد توثيق Swagger وScalar لدعم تمرير توكن الـ Bearer عبر زر Authorize
+/// <summary>
+/// Configures JWT Bearer authentication and Swagger/Scalar security definitions.
+/// </summary>
 public static class ApplicationSecurityExtension
 {
     public static IServiceCollection AddSecurityExtension(this IServiceCollection services, IConfiguration config)
     {
         var secretKey = config["Jwt:SecretKey"]
                         ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
-                        ?? "SuperSecretKeyForOCSystemTrainingProject2026SecureMin32Bytes!";
+                        ?? "SuperSecretKeyForStudentManagementSystem2026SecureMin32Bytes!";
 
         var keyBytes = Encoding.UTF8.GetBytes(secretKey);
         var symmetricKey = new SymmetricSecurityKey(keyBytes);
 
-        // إعداد Swagger لدعم إدخال الـ Bearer Token وإظهار القفل فقط على المسارات المحمية
+        // Configure Swagger security definition with Bearer token support
         services.AddSwaggerGen(options =>
         {
             var scheme = new OpenApiSecurityScheme
@@ -31,16 +30,16 @@ public static class ApplicationSecurityExtension
                 Scheme = "Bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "أدخل رمز JWT مباشرة في خانة القيمة"
+                Description = "Enter JWT Bearer token"
             };
 
             options.AddSecurityDefinition("Bearer", scheme);
 
-            // تطبيق القفل فقط على المسارات التي تحمل [Authorize] واستثناء [AllowAnonymous]
+            // Apply security requirement only to endpoints marked with [Authorize]
             options.OperationFilter<AuthorizeOperationFilter>();
         });
 
-        // إعداد JWT Bearer Authentication
+        // Configure JWT Bearer Authentication
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -67,8 +66,7 @@ public static class ApplicationSecurityExtension
 }
 
 /// <summary>
-/// فلتر Swagger لتطبيق القفل الأمني وحفظ الـ Token فقط على الـ Endpoints المحمية بـ [Authorize]
-/// واستثناء الـ Endpoints المفتوحة للعموم مثل [AllowAnonymous] كمسار تسجيل الدخول Login
+/// Swagger operation filter to apply security schemes exclusively to endpoints requiring authorization.
 /// </summary>
 public class AuthorizeOperationFilter : IOperationFilter
 {
@@ -86,8 +84,8 @@ public class AuthorizeOperationFilter : IOperationFilter
         if (hasAuthorize)
         {
             operation.Responses ??= [];
-            operation.Responses.TryAdd("401", new OpenApiResponse { Description = "غير مصرح - Unauthorized" });
-            operation.Responses.TryAdd("403", new OpenApiResponse { Description = "محظور - Forbidden" });
+            operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
+            operation.Responses.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
 
             operation.Security ??= [];
             operation.Security.Add(new OpenApiSecurityRequirement

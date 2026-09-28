@@ -2,15 +2,15 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace OC_System_Training.Infrastructure.Middleware;
 
-// تعليق تدريبي: الوسيط البرمجي لسياق المستخدم (UserContextMiddleware)
-// يقع موقعاً استراتيجياً في مسار المعالجة بين UseAuthentication() و UseAuthorization():
-// 1. يتحقق من أن الطلبات الموثقة تحمل معرف المستخدم المطلوب
-// 2. يضمن تجهيز سياق المستخدم قبل وصول الطلب للمتحكمات
+/// <summary>
+/// Pipeline middleware positioned between Authentication and Authorization.
+/// Ensures authenticated requests contain an extracted UserId claim and validates context integrity.
+/// </summary>
 public sealed class UserContextMiddleware(RequestDelegate next, ILogger<UserContextMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext http)
     {
-        // استثناء الـ Endpoints التي تسمح بالوصول المجهول [AllowAnonymous] مثل تسجيل الدخول
+        // Skip validation for public or anonymous endpoints
         var endpoint = http.GetEndpoint();
         var anonymous = endpoint?.Metadata.GetMetadata<IAllowAnonymous>() is not null;
 
@@ -20,7 +20,7 @@ public sealed class UserContextMiddleware(RequestDelegate next, ILogger<UserCont
             return;
         }
 
-        // قراءة معرف المستخدم من الـ Claims
+        // Extract user identifier claim from token
         var userIdClaim = http.User.Claims.FirstOrDefault(c => c.Type == "UserId" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
         if (string.IsNullOrWhiteSpace(userIdClaim))
@@ -30,7 +30,7 @@ public sealed class UserContextMiddleware(RequestDelegate next, ILogger<UserCont
             http.Response.ContentType = "application/json; charset=utf-8";
             await http.Response.WriteAsJsonAsync(new
             {
-                Message = "التوكن المستخدم لا يحمل معرّف المستخدم (UserId)، يرجى تسجيل الدخول مجدداً."
+                Message = "The provided token does not contain a valid user identifier (UserId). Please authenticate again."
             });
             return;
         }

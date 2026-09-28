@@ -2,14 +2,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace OC_System_Training.Features.Departments.Dtos;
 
-// تعليق تدريبي: DTO الخاص بإنشاء قسم دراسي جديد (POST)
+/// <summary>
+/// Data transfer object for creating a new academic department.
+/// </summary>
 public class DepartmentForm
 {
-    [Required(ErrorMessage = "اسم القسم مطلوب.")]
-    [StringLength(100, ErrorMessage = "اسم القسم لا يتجاوز 100 حرف.")]
+    [Required(ErrorMessage = "Department name is required.")]
+    [StringLength(100, ErrorMessage = "Department name cannot exceed 100 characters.")]
     public string Name { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "رمز القسم مطلوب.")]
-    [StringLength(20, ErrorMessage = "رمز القسم لا يتجاوز 20 حرفاً.")]
+    [Required(ErrorMessage = "Department code is required.")]
+    [StringLength(20, ErrorMessage = "Department code cannot exceed 20 characters.")]
     public string Code { get; set; } = string.Empty;
 }

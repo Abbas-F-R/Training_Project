@@ -2,8 +2,9 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Features.Departments.Dtos;
 
-// تعليق تدريبي: DTO الخاص بمخرجات الأقسام (Response)
-// يستخدم [Sqid] على المعرف لمنع كشف الرقم الفعلي للـ ID للواجهات الأمامية
+/// <summary>
+/// Data transfer object representing department details with obfuscated Sqid identifier.
+/// </summary>
 public class DepartmentResponse
 {
     [Sqid]

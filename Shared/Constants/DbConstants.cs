@@ -1,6 +1,8 @@
 namespace OC_System_Training.Shared.Constants;
 
-// تعليق تدريبي: مركز أسماء جداول قاعدة البيانات لمنع استخدام نصوص ثابتة (Magic Strings)
+/// <summary>
+/// Database table names constants to prevent magic strings across repositories.
+/// </summary>
 public static class DbConstants
 {
     public static class Tables

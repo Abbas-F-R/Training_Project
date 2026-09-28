@@ -1,10 +1,12 @@
 namespace OC_System_Training.Shared.Utils;
 
-// تعليق تدريبي: أداة تشفير وفحص كلمات المرور باستخدام خوارزمية BCrypt الآمنة
+/// <summary>
+/// Cryptographic utility for BCrypt password hashing and verification with automated salting.
+/// </summary>
 public static class PasswordHasher
 {
     /// <summary>
-    /// تشفير كلمة المرور بنظام BCrypt مع إضافة Salt عشوائي تلقائياً
+    /// Hashes a plain-text password using the BCrypt algorithm with a salt work factor of 11.
     /// </summary>
     public static string Hash(string password)
     {
@@ -12,7 +14,7 @@ public static class PasswordHasher
     }
 
     /// <summary>
-    /// مطابقة كلمة المرور المدخلة مع الـ Hash المخزن في قاعدة البيانات
+    /// Verifies that a plain-text password matches a stored BCrypt password hash.
     /// </summary>
     public static bool Verify(string password, string hash)
     {

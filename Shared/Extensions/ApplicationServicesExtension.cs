@@ -5,38 +5,39 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Shared.Extensions;
 
-// تعليق تدريبي: امتداد تسجيل الخدمات وحقن التبعيات التلقائي (ApplicationServicesExtension)
-// يستخدم Scrutor لتسجيل الخدمات تلقائياً، ويسجل FluentValidation لفحص المدخلات
+/// <summary>
+/// Registers application services, persistence context, FluentValidation, and Scrutor automated DI scanning.
+/// </summary>
 public static class ApplicationServicesExtension
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
     {
         services.AddHttpContextAccessor();
 
-        // 1. تسجيل DapperContext كـ Singleton
+        // 1. Register DapperContext as Singleton
         services.AddSingleton<DapperContext>();
 
-        // 2. تسجيل جميع مدققات FluentValidation في الـ Assembly تلقائياً
+        // 2. Discover and register all FluentValidation validators
         var assembly = typeof(Program).Assembly;
         services.AddValidatorsFromAssembly(assembly);
         services.AddFluentValidationAutoValidation();
 
-        // 3. تسجيل الخدمات ومستودعات البيانات تلقائياً عبر Scrutor
+        // 3. Scan and register services automatically using Scrutor attributes
         services.Scan(scan => scan
             .FromAssemblies(assembly)
-            // تسجيل كلاسات [Scoped]
+            // Register [Scoped] types
             .AddClasses(classes => classes.WithAttribute<ScopedAttribute>())
             .AsImplementedInterfaces()
             .AsSelf()
             .WithScopedLifetime()
 
-            // تسجيل كلاسات [Transient]
+            // Register [Transient] types
             .AddClasses(classes => classes.WithAttribute<TransientAttribute>())
             .AsImplementedInterfaces()
             .AsSelf()
             .WithTransientLifetime()
 
-            // تسجيل كلاسات [Singleton]
+            // Register [Singleton] types
             .AddClasses(classes => classes.WithAttribute<SingletonAttribute>())
             .AsImplementedInterfaces()
             .AsSelf()

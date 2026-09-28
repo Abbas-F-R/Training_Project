@@ -1,94 +1,93 @@
-# دليل إدارة الصلاحيات والتحكم بالوصول (Authorization Guide)
-### تحديد ما يُسمح للمستخدم بتنفيذه، الأدوار الأمنية، والفرق الدقيق بين 401 و 403
+# Authorization & Access Control Guide
+### Role-Based Access Control (RBAC), Endpoint Security Matrix, and Status Code Specifications (401 vs. 403)
 
 ---
 
-## 1. ما هو الـ Authorization ولماذا لا يكفي مجرد تسجيل الدخول؟
+## 1. Overview & Principle of Least Privilege
 
-إذا كانت المصادقة (**Authentication**) تجيب عن سؤال: *"من أنت؟"*، فإن التفويض وإدارة الصلاحيات (**Authorization**) يجيب عن سؤال: **"هل يُسمح لك بالقيام بهذا العمل تحديداً؟"**.
+While **Authentication** answers the question *"Who are you?"*, **Authorization** answers the fundamental security question: **"Are you permitted to perform this specific operation?"**.
 
-### لماذا لا نكتفي بحماية الـ Endpoints بـ `[Authorize]` فقط؟
-تخيل أن نظام الكلية يسمح لأي مستخدم مسجل دخول بتنفيذ أي شيء:
-- يمكن لطالب أو موظف إدخال بيانات عادي أن يستدعي `DELETE /api/department/1` ويحذف قسم علوم الحاسوب بالكامل!
-- يمكن لمستخدم عادي استعراض كافة حركات النظام وسجلات المراقبة في `GET /api/auditlog`!
-- إخفاء زر "حذف" في تطبيق الـ Frontend **ليس حماية أمنية على الإطلاق**؛ لأن أي متدرب أو مستخدم خبيث يمكنه فتح أدوات المطور (F12) أو Postman وإرسال طلب `DELETE` مباشرة إلى الـ API.  
-لذلك، **يجب أن تتم حماية الصلاحيات وفرضها بقوة داخل طبقة الـ Backend.**
+### Defense in Depth: Why Backend Enforcement is Mandatory
+In modern web applications, the presentation tier (UI/Frontend) and the application tier (API/Backend) are decoupled:
+- **Hiding UI Buttons is Not Security:** Suppressing an "Edit" or "Delete" button in a client application provides no actual protection. Any user can inspect network traffic, use developer tools, or invoke endpoints directly via tools like cURL or Postman.
+- **Principle of Least Privilege (PoLP):** Every authenticated identity must operate with the minimum level of access required to complete their designated business functions.
+- **Server-Side Enforcement:** Every HTTP request received by the API must independently validate whether the requesting security context possesses the requisite role prior to executing domain logic or database transactions.
 
 ---
 
-## 2. الفرق الحاسم بين كود 401 Unauthorized وكود 403 Forbidden
+## 2. Distinction: HTTP 401 Unauthorized vs. HTTP 403 Forbidden
 
-كثيراً ما يخلط المطورون المبتدئون بين هذين الرمزين:
+A common architectural pitfall is conflating authentication failure with authorization failure. The system enforces strict RFC 9110 HTTP semantics:
 
 ```mermaid
 graph TD
-    Request["الطلب الوارد إلى الـ API"] --> AuthCheck{"هل التوكن موجود وصحيح؟"}
-    AuthCheck -- "لا (تالف / منتهي / مفقود)" --> S401["401 Unauthorized<br/>(أنت مجهول، سجل دخولك أولاً)"]
-    AuthCheck -- "نعم" --> RoleCheck{"هل دورك يطابق الصلاحية المطلوبة؟"}
-    RoleCheck -- "لا (أنت User والعملية تطلب Admin)" --> S403["403 Forbidden<br/>(نعرف هويتك، لكن ليس لديك إذن لتنفيذ هذا)"]
-    RoleCheck -- "نعم" --> Success["200 OK / تنفيذ العملية"]
+    Request["Incoming API Request"] --> AuthCheck{"Is JWT Token Present & Valid?"}
+    AuthCheck -- "No (Missing / Expired / Invalid Signature)" --> S401["401 Unauthorized<br/>(Identity Unverified — Re-authenticate)"]
+    AuthCheck -- "Yes" --> RoleCheck{"Does Identity Satisfy Required Role?"}
+    RoleCheck -- "No (e.g., Role 'User' accessing 'Admin' endpoint)" --> S403["403 Forbidden<br/>(Identity Verified — Insufficient Permissions)"]
+    RoleCheck -- "Yes" --> Success["200 OK / Execute Controller & Service"]
 ```
 
-| رمز الحالة | المعنى التقني | متى يظهر في مشروعنا؟ |
-|------------|--------------|-----------------------|
-| **`401 Unauthorized`** | الهوية غير مثبتة أو التوكن غير صالح. | عند محاولة استدعاء أي Endpoint محمي بدون تمرير توكن JWT في الـ Header. |
-| **`403 Forbidden`** | الهوية مثبتة ومعروفة، لكن لا يملك المستخدم الصلاحية الكافية. | عندما يقوم مستخدم يحمل دور `User` بمحاولة حذف طالب (`DELETE /api/student/1`) أو استعراض سجلات التدقيق (`GET /api/auditlog`). |
+### Comparative Specification
+
+| Status Code | Technical Definition | Cause in Application |
+|---|---|---|
+| **`401 Unauthorized`** | The client request lacks valid authentication credentials for the target resource. | Invoking any protected endpoint without supplying a `Bearer <token>` in the `Authorization` header, or supplying an expired/tampered JWT. |
+| **`403 Forbidden`** | The server understands the request and verified the caller's identity, but refuses to authorize execution. | An authenticated user possessing the `User` role attempting to execute administrative actions (e.g., `DELETE /api/student/{id}`, `POST /api/department`, `GET /api/auditlog`). |
 
 ---
 
-## 3. نموذج الأدوار في المشروع التدريبي (`Admin` مقابل `User`)
+## 3. Role-Based Access Control (RBAC) Architecture
 
-تجنبنا تعقيدات أنظمة الصلاحيات المؤسسية الضخمة (مثل Permissions Matrix و Dynamic Claims)، واعتمدنا نموذجاً عملياً واضحاً ومباشراً:
+The application adopts a clean, robust Role-Based Access Control (RBAC) model implemented via ASP.NET Core Claims and Role authorization attributes:
 
-1. **مدير النظام (`Role = "Admin"`):**
-   - إضافة وتعديل وحذف الأقسام الدراسية.
-   - حذف الطلاب.
-   - تسجيل مستخدمين جدد للنظام.
-   - الاطلاع على سجلات التدقيق والتتبع (`AuditLogs`).
-2. **المستخدم العادي (`Role = "User"`):**
-   - استعراض الأقسام واستخدامها في القوائم المنسدلة (Lookup).
-   - استعراض الطلاب والبحث بينهم.
-   - إضافة طالب جديد وتعديل بياناته.
-   - **ممنوع منعاً باتاً من الحذف، ومن تعديل الأقسام، ومن فتح سجلات التدقيق.**
+1. **System Administrator (`Role = "Admin"`):**
+   - Full administrative lifecycle management of Academic Departments (Create, Read, Update, Delete).
+   - Deletion authority for Student records (Soft Delete).
+   - User account provisioning (`POST /api/auth/register`).
+   - Access to system audit trails and compliance logs (`GET /api/auditlog`).
 
----
-
-## 4. مصفوفة الصلاحيات لكافة نقاط الاتصال (Endpoints Authorization Matrix)
-
-| المسار (Endpoint) | الطريقة (Method) | مستوى الحماية | الصلاحية المطلوبة | السلوك عند مخالفة الصلاحية |
-|-------------------|------------------|---------------|-------------------|---------------------------|
-| `/api/auth/login` | `POST` | مفتوح للعموم | `[AllowAnonymous]` | - |
-| `/api/auth/register` | `POST` | محمي برتبة | `[Authorize(Roles = "Admin")]` | يرجع `403 Forbidden` للمستخدم العادي |
-| `/api/auth/me` | `GET` | محمي بالدخول | `[Authorize]` | يرجع `401 Unauthorized` للمجهول |
-| `/api/department` | `GET` | محمي بالدخول | `[Authorize]` | متاح لكل من `Admin` و `User` |
-| `/api/department/lookup` | `GET` | محمي بالدخول | `[Authorize]` | متاح لكل من `Admin` و `User` |
-| `/api/department` | `POST` | محمي برتبة | `[Authorize(Roles = "Admin")]` | يرجع `403 Forbidden` للمستخدم العادي |
-| `/api/department/{id}` | `PUT` | محمي برتبة | `[Authorize(Roles = "Admin")]` | يرجع `403 Forbidden` للمستخدم العادي |
-| `/api/department/{id}` | `DELETE` | محمي برتبة | `[Authorize(Roles = "Admin")]` | يرجع `403 Forbidden` للمستخدم العادي |
-| `/api/student` | `GET` | محمي بالدخول | `[Authorize]` | متاح للجميع بعد المصادقة |
-| `/api/student` | `POST` | محمي بالدخول | `[Authorize]` | متاح لمدخلي البيانات والمدراء |
-| `/api/student/{id}` | `PUT` | محمي بالدخول | `[Authorize]` | متاح لمدخلي البيانات والمدراء |
-| `/api/student/{id}` | `DELETE` | محمي برتبة | `[Authorize(Roles = "Admin")]` | يرجع `403 Forbidden` للمستخدم العادي |
-| `/api/auditlog` | `GET` | محمي برتبة | `[Authorize(Roles = "Admin")]` | يرجع `403 Forbidden` للمستخدم العادي |
+2. **Standard Operational User (`Role = "User"`):**
+   - Read access to Academic Departments for dropdowns and lookup (`/api/department/lookup`, `/api/department`).
+   - Querying, filtering, and retrieving student profiles.
+   - Enrolling new students and updating student academic records.
+   - **Explicitly Forbidden:** Deleting students, mutating department structures, registering users, and viewing system audit logs.
 
 ---
 
-## 5. تجربة عملية: كيف يختبر المتدرب رمز 403 Forbidden بنفسه؟
+## 4. Endpoint Security & Authorization Matrix
 
-1. **الخطوة الأولى:** سجل الدخول بحساب مسؤول `admin` وأنشئ مستخدم عادي جديد:
-   - `POST /api/auth/register`
-   ```json
-   {
-     "fullName": "موظف التسجيل",
-     "userName": "clerk",
-     "password": "ClerkPassword123!",
-     "role": "User"
-   }
-   ```
-2. **الخطوة الثانية:** سجل الدخول بحساب المستخدم الجديد (`clerk`) عبر `POST /api/auth/login`، وانسخ التوكن الخاص به.
-3. **الخطوة الثالثة:** في Swagger أو Scalar، ضع توكن المستخدم `clerk`، ثم حاول حذف قسم دراسي:
-   - `DELETE /api/department/UkLWZg9D`
-4. **النتيجة الحتمية:**
-   - يرفض الـ Backend العملية فوراً ويرجع **`403 Forbidden`**.
-   - لا تصل المعالجة إلى الـ Service Layer، ولا يُحذف السطر من قاعدة البيانات.
-   - يثبت ذلك للمتدرب أن الـ API محمي بقوة بصرف النظر عما تظهره أو تخفيه واجهة المستخدم.
+The table below documents the security profile for every endpoint across the system:
+
+| Route | HTTP Method | Access Level | Policy / Attribute | Unauthorized Behavior |
+|---|---|---|---|---|
+| `/api/auth/login` | `POST` | Public | `[AllowAnonymous]` | N/A |
+| `/api/auth/register` | `POST` | Administrator | `[Authorize(Roles = "Admin")]` | Returns `403 Forbidden` for standard users |
+| `/api/auth/me` | `GET` | Authenticated | `[Authorize]` | Returns `401 Unauthorized` if unauthenticated |
+| `/api/department` | `GET` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |
+| `/api/department/lookup` | `GET` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |
+| `/api/department/{id}` | `GET` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |
+| `/api/department` | `POST` | Administrator | `[Authorize(Roles = "Admin")]` | Returns `403 Forbidden` for standard users |
+| `/api/department/{id}` | `PUT` | Administrator | `[Authorize(Roles = "Admin")]` | Returns `403 Forbidden` for standard users |
+| `/api/department/{id}` | `DELETE` | Administrator | `[Authorize(Roles = "Admin")]` | Returns `403 Forbidden` for standard users |
+| `/api/student` | `GET` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |
+| `/api/student/{id}` | `GET` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |
+| `/api/student` | `POST` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |
+| `/api/student/{id}` | `PUT` | Authenticated | `[Authorize]` | Accessible to `Admin` and `User` |
+| `/api/student/{id}` | `DELETE` | Administrator | `[Authorize(Roles = "Admin")]` | Returns `403 Forbidden` for standard users |
+| `/api/auditlog` | `GET` | Administrator | `[Authorize(Roles = "Admin")]` | Returns `403 Forbidden` for standard users |
+
+---
+
+## 5. Security Verification & Role Enforcement
+
+Security enforcement is validated through automated test suites and can be reproduced via OpenAPI / Scalar / Swagger:
+
+### Manual Verification Workflow
+1. **Provision User:** An administrator executes `POST /api/auth/register` with role `"User"`.
+2. **Obtain Token:** The operational user authenticates via `POST /api/auth/login`, acquiring a standard JWT token.
+3. **Attempt Elevated Action:** The user sends a `DELETE /api/department/{id}` request with their token in the `Authorization` header.
+4. **Verified Result:**
+   - The ASP.NET Core Authorization middleware intercepts the request prior to invoking the controller.
+   - The API immediately responds with **`403 Forbidden`**.
+   - Zero database mutations occur, and no service methods are triggered.

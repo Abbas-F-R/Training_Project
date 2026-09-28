@@ -6,18 +6,18 @@ using OC_System_Training.Shared.Attributes;
 
 namespace OC_System_Training.Infrastructure.Persistence.Repositories.BaseRepository;
 
-// تعليق تدريبي: كاش لحفظ خصائص الـ DTOs لتفادي استدعاء الـ Reflection في كل طلب
+/// <summary>
+/// Cached reflection metadata for DTO properties to eliminate repetitive reflection overhead per request.
+/// </summary>
 internal static class RepositoryCache
 {
     public static readonly ConcurrentDictionary<Type, List<PropertyInfo>> ParameterPropertiesCache = new();
 }
 
-// تعليق تدريبي: الـ Repository الأساسي (BaseRepository)
-// يوفر التطبيق العملي الكامل لكافة عمليات الـ CRUD عبر استدعاء الـ Stored Procedures في Dapper
-// ويطبق المعايير الصارمة:
-// 1. عدم كتابة أي SQL خام داخل الـ C#
-// 2. استخدام Transactions عند الإضافة والتعديل والحذف
-// 3. قراءة البيانات دوماً من الـ View المقابل للجدول (vw_{TableName})
+/// <summary>
+/// Generic repository providing full CRUD execution against SQL Server Stored Procedures using Dapper.
+/// Enforces transactional consistency and reads exclusively through database views (vw_{TableName}).
+/// </summary>
 public abstract class BaseRepository<TView, TForm, TUpdate, TFilter>(DapperContext context, string tableName)
     : IBaseRepository<TView, TForm, TUpdate, TFilter>
 {
@@ -25,8 +25,7 @@ public abstract class BaseRepository<TView, TForm, TUpdate, TFilter>(DapperConte
     protected readonly string TableName = tableName;
 
     /// <summary>
-    /// التراجع الآمن عن المعاملة (Transaction) في حال حدوث خطأ دون التسبب بخطأ إضافي
-    /// إذا كان الإجراء المخزن قد قام بعمل Rollback بالفعل
+    /// Safely rolls back a transaction, suppressing errors if the Stored Procedure already executed a rollback.
     /// </summary>
     private static void RollbackQuietly(IDbTransaction transaction)
     {
@@ -36,12 +35,12 @@ public abstract class BaseRepository<TView, TForm, TUpdate, TFilter>(DapperConte
         }
         catch (InvalidOperationException)
         {
-            // تم التراجع عنها داخل الإجراء المخزن مسبقاً
+            // Transaction already rolled back inside stored procedure
         }
     }
 
     /// <summary>
-    /// استخراج خصائص الكائن وتحويلها إلى معلمات Dapper مع استثناء الخصائص الموسومة بـ [IgnoreParameter]
+    /// Converts object properties into Dapper dynamic parameters, skipping properties marked with [IgnoreParameter].
     /// </summary>
     protected DynamicParameters GetDynamicParameters(object? obj)
     {

@@ -5,7 +5,9 @@ using Sqids;
 
 namespace OC_System_Training.Shared.Helper;
 
-// تعليق تدريبي: Model Binder يقوم بفك تشفير المعرفات من الـ Route أو Query String تلقائياً
+/// <summary>
+/// Model binder for decoding Sqid strings from route values and query parameters into numeric IDs.
+/// </summary>
 public class SqidModelBinder : IModelBinder
 {
     private static readonly SqidsEncoder<long> Encoder = new(new SqidsOptions { MinLength = 8 });
@@ -61,18 +63,21 @@ public class SqidModelBinderProvider : IModelBinderProvider
         if (context == null) throw new ArgumentNullException(nameof(context));
 
         var isLong = context.Metadata.ModelType == typeof(long) || context.Metadata.ModelType == typeof(long?);
-        
-        if (isLong)
-        {
-            var hasSqidAttribute = context.Metadata is DefaultModelMetadata defaultMetadata && 
-                                   (defaultMetadata.Attributes.ParameterAttributes?.Any(a => a is SqidAttribute) == true ||
-                                    defaultMetadata.Attributes.PropertyAttributes?.Any(a => a is SqidAttribute) == true ||
-                                    defaultMetadata.Attributes.Attributes.Any(a => a is SqidAttribute));
+        if (!isLong) return null;
 
-            if (hasSqidAttribute || context.Metadata.Name?.ToLower() == "id")
-            {
-                return new SqidModelBinder();
-            }
+        var hasSqidAttr = false;
+        if (context.Metadata is DefaultModelMetadata defaultMetadata)
+        {
+            hasSqidAttr = defaultMetadata.Attributes.Attributes.OfType<SqidAttribute>().Any();
+        }
+
+        var isIdentifierName = context.Metadata.PropertyName != null &&
+            (context.Metadata.PropertyName.EndsWith("Id", StringComparison.OrdinalIgnoreCase) ||
+             context.Metadata.PropertyName.Equals("id", StringComparison.OrdinalIgnoreCase));
+
+        if (hasSqidAttr || isIdentifierName)
+        {
+            return new SqidModelBinder();
         }
 
         return null;

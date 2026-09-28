@@ -19,12 +19,12 @@ public class ValidationTests
     private readonly StudentFormValidator _studentValidator = new();
     private readonly DepartmentFormValidator _departmentValidator = new();
 
-    [Fact(DisplayName = "1. نموذج طالب ببيانات مكتملة وصحيحة يجتاز التحقق")]
+    [Fact(DisplayName = "StudentForm with valid complete data passes validation")]
     public void StudentForm_WithValidData_PassesValidation()
     {
         var form = new StudentForm
         {
-            FullName = "كرار حيدر جاسم",
+            FullName = "Karrar Haider Jassim",
             StudentCode = "STU-2026-099",
             Email = "karrar@univ.edu",
             PhoneNumber = "07701234567",
@@ -37,7 +37,7 @@ public class ValidationTests
         result.IsValid.Should().BeTrue();
     }
 
-    [Fact(DisplayName = "2. نموذج طالب بدون اسم أو برقم جامعي فارغ يفشل في التحقق")]
+    [Fact(DisplayName = "StudentForm with missing required fields fails validation")]
     public void StudentForm_WithEmptyRequiredFields_FailsValidation()
     {
         var form = new StudentForm
@@ -54,15 +54,15 @@ public class ValidationTests
         result.Errors.Should().Contain(e => e.PropertyName == nameof(StudentForm.DepartmentId));
     }
 
-    [Fact(DisplayName = "3. المرحلة الدراسية خارج النطاق 1-6 تفشل في التحقق")]
+    [Fact(DisplayName = "StudentForm with stage out of range 1-6 fails validation")]
     public void StudentForm_WithInvalidStage_FailsValidation()
     {
         var form = new StudentForm
         {
-            FullName = "حيدر جواد",
+            FullName = "Haider Jawad",
             StudentCode = "STU-999",
             DepartmentId = 1,
-            Stage = 7 // خارج النطاق
+            Stage = 7
         };
 
         var result = _studentValidator.Validate(form);
@@ -70,15 +70,15 @@ public class ValidationTests
         result.Errors.Should().Contain(e => e.PropertyName == nameof(StudentForm.Stage));
     }
 
-    [Fact(DisplayName = "4. تاريخ ميلاد الطالب في المستقبل يفشل في التحقق")]
+    [Fact(DisplayName = "StudentForm with future birth date fails validation")]
     public void StudentForm_WithFutureBirthDate_FailsValidation()
     {
         var form = new StudentForm
         {
-            FullName = "زينب علي",
+            FullName = "Zainab Ali",
             StudentCode = "STU-100",
             DepartmentId = 1,
-            BirthDate = DateTime.Today.AddDays(5) // تاريخ مستقبلي
+            BirthDate = DateTime.Today.AddDays(5)
         };
 
         var result = _studentValidator.Validate(form);
@@ -86,13 +86,13 @@ public class ValidationTests
         result.Errors.Should().Contain(e => e.PropertyName == nameof(StudentForm.BirthDate));
     }
 
-    [Fact(DisplayName = "5. رمز القسم إذا احتوى على مسافات أو كان أقل من حرفين يفشل في التحقق")]
+    [Fact(DisplayName = "DepartmentForm with whitespace or code under 2 characters fails validation")]
     public void DepartmentForm_WithInvalidCode_FailsValidation()
     {
         var form = new DepartmentForm
         {
-            Name = "قسم غير صالح",
-            Code = "C S" // يحتوي مسافة
+            Name = "Invalid Department",
+            Code = "C S"
         };
 
         var result = _departmentValidator.Validate(form);
@@ -100,7 +100,7 @@ public class ValidationTests
         result.Errors.Should().Contain(e => e.PropertyName == nameof(DepartmentForm.Code));
     }
 
-    [Fact(DisplayName = "6. إضافة طالب برقم جامعي مكرر تفشل على مستوى منطق العمل في الخدمة")]
+    [Fact(DisplayName = "StudentService rejects student creation with duplicate student code")]
     public async Task StudentService_WithDuplicateStudentCode_ReturnsFailure()
     {
         // Arrange
@@ -108,9 +108,7 @@ public class ValidationTests
         var departmentRepoMock = new Mock<IDepartmentRepository>();
         var studentRepoMock = new Mock<IStudentRepository>();
 
-        // القسم موجود
         departmentRepoMock.Setup(d => d.Get(1, null)).ReturnsAsync(new DepartmentResponse { Id = 1, Name = "CS" });
-        // الكود مكرر
         studentRepoMock.Setup(s => s.IsDuplicateAsync("StudentCode", "STU-DUPLICATE", null)).ReturnsAsync(true);
 
         wrapperMock.Setup(w => w.Department).Returns(departmentRepoMock.Object);
@@ -121,7 +119,7 @@ public class ValidationTests
         {
             Dto = new StudentForm
             {
-                FullName = "طالب مكرر",
+                FullName = "Duplicate Student",
                 StudentCode = "STU-DUPLICATE",
                 DepartmentId = 1
             },
@@ -136,7 +134,7 @@ public class ValidationTests
         result.Error.Should().Be(Messages.DuplicateStudentCode);
     }
 
-    [Fact(DisplayName = "7. إضافة طالب لقسم دراسي غير موجود تفشل في الخدمة مع إرجاع DepartmentNotFound")]
+    [Fact(DisplayName = "StudentService rejects student creation when target department does not exist")]
     public async Task StudentService_WithNonExistentDepartment_ReturnsFailure()
     {
         // Arrange
@@ -144,7 +142,6 @@ public class ValidationTests
         var departmentRepoMock = new Mock<IDepartmentRepository>();
         var studentRepoMock = new Mock<IStudentRepository>();
 
-        // القسم غير موجود
         departmentRepoMock.Setup(d => d.Get(999, null)).ReturnsAsync((DepartmentResponse?)null);
 
         wrapperMock.Setup(w => w.Department).Returns(departmentRepoMock.Object);
@@ -155,7 +152,7 @@ public class ValidationTests
         {
             Dto = new StudentForm
             {
-                FullName = "طالب لقسم مفقود",
+                FullName = "Missing Dept Student",
                 StudentCode = "STU-VALID",
                 DepartmentId = 999
             },

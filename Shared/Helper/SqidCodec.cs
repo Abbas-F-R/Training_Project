@@ -2,19 +2,20 @@ using Sqids;
 
 namespace OC_System_Training.Shared.Helper;
 
-// تعليق تدريبي: أداة تشفير وفك تشفير المعرفات (Sqids)
-// تحوّل أرقام الـ ID (BIGINT) إلى نصوص عشوائية آمنة مثل "b9X7mK2p" والعكس
+/// <summary>
+/// Utility helper for encoding 64-bit integers into obfuscated URL-safe Sqid strings and decoding them back.
+/// </summary>
 public static class SqidCodec
 {
     private static readonly SqidsEncoder<long> Encoder = new(new SqidsOptions { MinLength = 8 });
 
     /// <summary>
-    /// تشفير المعرف الرقمي إلى نص Sqid
+    /// Encodes a 64-bit integer identifier into an 8+ character Sqid string.
     /// </summary>
     public static string Encode(long value) => Encoder.Encode(value);
 
     /// <summary>
-    /// فك تشفير نص Sqid أو قراءة الرقم العادي إذا أرسله العميل
+    /// Attempts to decode a string as either a valid Sqid or a numeric integer string.
     /// </summary>
     public static long? TryDecode(string? value)
     {

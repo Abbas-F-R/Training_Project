@@ -1,7 +1,7 @@
 -- ============================================================================
 -- 01_Tables.sql
--- مشروع OC_System التدريبي (نظام إدارة الطلاب - Student Management System)
--- إنشاء جداول النظام الأساسية، الفهارس المصفاة، وقيود سلامة البيانات (Constraints)
+-- Student Management System Database Schema
+-- Core Tables, Filtered Indexes, and Integrity Constraints
 -- ============================================================================
 
 USE [OC_System_Training_DB];

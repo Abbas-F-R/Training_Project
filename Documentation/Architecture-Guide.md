@@ -1,98 +1,101 @@
-# الدليل المعماري للنظام (Architecture Guide)
-### معمارية الميزات الرأسية، سجل التدقيق الذري، والتحكم بالوصول في OC_System
+# Architecture Guide
+
+### Vertical Slice Architecture, In-Transaction Auditing, and Clean Layered Design
 
 ---
 
-## 1. نظرة عامة على المعمارية
+## 1. Architectural Overview
 
-يعتمد المشروع نمط **Feature-Based Architecture** (المعروف أيضاً بـ **Vertical Slice Architecture**).
-بدلاً من توزيع كود الميزة الواحدة عبر مجلدات عامة بعيدة عن بعضها (Controllers في مجلد منفصل، Services في مجلد آخر، إلخ)، يتم تجميع كل ما يخص الميزة الواحدة في مجلد مستقل تحت `Features/<FeatureName>/`، بما في ذلك الـ DTOs والـ Validators وسكريبتات قاعدة البيانات (Sql).
+The system implements **Vertical Slice Architecture** (also known as Feature-Based Architecture). Rather than splitting code across distant horizontal folders (placing all controllers in one folder, all services in another, etc.), every feature is self-contained under `Features/<FeatureName>/`.
+
+A single feature folder encapsulates everything required to deliver that slice of business capability: Controllers, DTOs, Services, Repositories, Validators, and feature-specific SQL scripts.
 
 ```mermaid
 graph TD
-    Client["العميل / المتصفح (Client)"] --> Pipeline["مسار المعالجة (Pipeline)"]
-    Pipeline --> Auth["المصادقة (JWT Bearer)"]
-    Auth --> UserCtx["وسيط سياق المستخدم (UserContextMiddleware)"]
-    UserCtx --> Authorize["التحكم بالوصول (Authorization Filter: Admin / User)"]
-    Authorize --> Validator["التحقق الصارم (FluentValidation)"]
-    Validator --> Controller["المتحكم (GenericController / BaseController)"]
-    Controller --> Service["الخدمة (EntityService)"]
-    Service --> Repos["مستودع البيانات (BaseRepository / RepositoryWrapper)"]
-    Repos --> Dapper["مدير الاتصال DapperContext"]
-    Dapper --> DB[("قاعدة البيانات SQL Server (SPs & Views & In-Transaction Audit)")]
+    Client["Client / Consumer"] --> Pipeline["HTTP Request Pipeline"]
+    Pipeline --> Auth["Authentication (JWT Bearer)"]
+    Auth --> UserCtx["User Context Middleware (Claims Extraction)"]
+    UserCtx --> Authorize["Authorization Filter (Role: Admin / User)"]
+    Authorize --> Validator["Input Validation (FluentValidation)"]
+    Validator --> Controller["Controller (GenericController / BaseController)"]
+    Controller --> Service["Domain Service (Business Rules & Validation)"]
+    Service --> Repos["Data Access (BaseRepository / RepositoryWrapper)"]
+    Repos --> Dapper["Connection Management (DapperContext)"]
+    Dapper --> DB[("SQL Server (Views, SPs & In-Transaction Audit)")]
 ```
 
 ---
 
-## 2. الهيكلية العامة للمجلدات (Folder Structure)
+## 2. Directory & Component Layout
 
 ```text
 OC_System_Training/
-├── Features/                  <-- الميزات والوحدات الوظيفية المستقلة
-│   ├── AuditLogs/             <-- ميزة سجل التدقيق والتتبع للمسؤول
-│   │   ├── Controllers/       <-- AuditLogController [Authorize(Roles = "Admin")]
-│   │   ├── Dtos/              <-- AuditLogFilter, AuditLogResponse
-│   │   ├── Repositories/      <-- IAuditLogRepository, AuditLogRepository
-│   │   ├── Services/          <-- IAuditLogService, AuditLogService
-│   │   └── Sql/               <-- 01_AuditLogs_Tables..., 02_AuditLogs_Procedures.sql
-│   ├── Auth/                  <-- ميزة المصادقة وتسجيل الدخول
-│   │   ├── Controllers/       <-- AuthController
-│   │   ├── Dtos/              <-- LoginRequest, LoginResponse, RegisterRequest, UserDto
-│   │   ├── Repositories/      <-- IUserRepository, UserRepository
-│   │   ├── Services/          <-- IAuthService, AuthService
-│   │   ├── Sql/               <-- 01_Users_Tables..., 02_Users_Procedures.sql
-│   │   └── Validators/        <-- LoginRequestValidator, RegisterRequestValidator
-│   ├── Departments/           <-- ميزة إدارة الأقسام الدراسية
-│   │   ├── Controllers/       <-- DepartmentController (CRUD + Lookup)
-│   │   ├── Dtos/              <-- DepartmentForm, DepartmentUpdate, DepartmentFilter, DepartmentResponse
-│   │   ├── Repositories/      <-- IDepartmentRepository, DepartmentRepository (مع دالة Lookup)
-│   │   ├── Services/          <-- IDepartmentService, DepartmentService
-│   │   ├── Sql/               <-- 01_Departments_Tables..., 02_Departments_Procedures.sql (DepartmentsLookup)
-│   │   └── Validators/        <-- DepartmentFormValidator, DepartmentUpdateValidator
-│   └── Students/              <-- ميزة إدارة الطلاب
-│       ├── Controllers/       <-- StudentController
-│       ├── Dtos/              <-- StudentForm, StudentUpdate, StudentFilter, StudentResponse
-│       ├── Repositories/      <-- IStudentRepository, StudentRepository
-│       ├── Services/          <-- IStudentService, StudentService
-│       ├── Sql/               <-- 01_Students_Tables..., 02_Students_Procedures.sql
-│       └── Validators/        <-- StudentFormValidator, StudentUpdateValidator, StudentFilterValidator
-├── Infrastructure/            <-- البنية التحتية والوصول لقاعدة البيانات
-│   ├── Middleware/            <-- UserContextMiddleware
-│   └── Persistence/           <-- DapperContext, DatabaseSeeder, BaseRepository, RepositoryWrapper
-│       └── Sql/               <-- 00_Base_Procedures.sql, 01_SeedData.sql
-├── Shared/                    <-- المكونات والملفات الثابتة المشتركة
-│   ├── Attributes/            <-- [Scoped], [Sqid], [IgnoreParameter]
-│   ├── Base/                  <-- BaseController, GenericController, IBaseService, CurrentUser, dto/
-│   ├── Constants/             <-- DbConstants, Messages
-│   ├── Enums/                 <-- LanguageType
-│   ├── Extensions/            <-- Pipeline, Security, Services, Controllers, Cors
-│   └── Utils/                 <-- ErrorMessagesUtils, PasswordHasher, SqidCodec
-├── tests/                     <-- حزمة الاختبارات الآلية الشاملة
-│   └── OC_System_Training.Tests/  <-- اختبارات Auth, Authorization, Validation, و AuditLog
-├── Documentation/             <-- أدلة التدريب والتوثيق المحدثة
-├── sql/                       <-- MasterMigration.sql (سكريبت التهيئة الشامل)
-├── appsettings.json           <-- إعدادات السيرفر وقاعدة البيانات المحلية ومصادقة ويندوز
-└── Program.cs                 <-- نقطة البداية المبسطة
+├── Features/                              <-- Vertical Slice Modules
+│   ├── AuditLogs/                         <-- Immutable Audit Trail Feature
+│   │   ├── Controllers/                   <-- AuditLogController [Authorize(Roles = "Admin")]
+│   │   ├── Dtos/                          <-- AuditLogFilter, AuditLogResponse
+│   │   ├── Repositories/                  <-- IAuditLogRepository, AuditLogRepository
+│   │   ├── Services/                      <-- IAuditLogService, AuditLogService
+│   │   └── Sql/                           <-- Tables, indexes, and stored procedures
+│   ├── Auth/                              <-- Authentication & Identity Feature
+│   │   ├── Controllers/                   <-- AuthController
+│   │   ├── Dtos/                          <-- LoginRequest, LoginResponse, RegisterRequest, UserDto
+│   │   ├── Repositories/                  <-- IUserRepository, UserRepository
+│   │   ├── Services/                      <-- IAuthService, AuthService
+│   │   ├── Sql/                           <-- Users tables, constraints, indexes, SPs
+│   │   └── Validators/                    <-- LoginRequestValidator, RegisterRequestValidator
+│   ├── Departments/                       <-- Academic Departments Feature
+│   │   ├── Controllers/                   <-- DepartmentController (CRUD + Lookup)
+│   │   ├── Dtos/                          <-- DepartmentForm, DepartmentUpdate, DepartmentFilter, DepartmentResponse
+│   │   ├── Repositories/                  <-- IDepartmentRepository, DepartmentRepository
+│   │   ├── Services/                      <-- IDepartmentService, DepartmentService
+│   │   ├── Sql/                           <-- Tables, views, and stored procedures
+│   │   └── Validators/                    <-- DepartmentFormValidator, DepartmentUpdateValidator
+│   └── Students/                          <-- Student Information Feature
+│       ├── Controllers/                   <-- StudentController
+│       ├── Dtos/                          <-- StudentForm, StudentUpdate, StudentFilter, StudentResponse
+│       ├── Repositories/                  <-- IStudentRepository, StudentRepository
+│       ├── Services/                      <-- IStudentService, StudentService
+│       ├── Sql/                           <-- Tables, views, constraints, and stored procedures
+│       └── Validators/                    <-- StudentFormValidator, StudentUpdateValidator, StudentFilterValidator
+├── Infrastructure/                        <-- Shared Infrastructure & Persistence
+│   ├── Middleware/                        <-- UserContextMiddleware
+│   └── Persistence/                       <-- DapperContext, DatabaseSeeder, BaseRepository, RepositoryWrapper
+│       └── Sql/                           <-- 00_Base_Procedures.sql, 01_SeedData.sql
+├── Shared/                                <-- Shared Architectural Building Blocks
+│   ├── Attributes/                        <-- [Scoped], [Transient], [Singleton], [Sqid], [IgnoreParameter]
+│   ├── Base/                              <-- BaseController, GenericController, IBaseService, CurrentUser, dto/
+│   ├── Constants/                         <-- DbConstants, Messages
+│   ├── Enums/                             <-- LanguageType
+│   ├── Extensions/                        <-- Pipeline, Security, Services, Controllers, Cors
+│   └── Utils/                             <-- ErrorMessagesUtils, PasswordHasher, SqidCodec
+├── tests/                                 <-- Automated Test Suite (78 Tests)
+│   └── OC_System_Training.Tests/
+├── Documentation/                         <-- Technical Architecture Guides
+├── sql/                                   <-- MasterMigration.sql (Consolidated DB script)
+├── appsettings.json                       <-- Configuration
+└── Program.cs                             <-- Minimalist composition root
 ```
 
 ---
 
-## 3. شرح الطبقات ومسؤولياتها
+## 3. Core Architectural Layers & Responsibilities
 
-### A. طبقة سجل التدقيق والتتبع (Audit Log Layer)
-- جدول `AuditLogs` صُمم بنمط **Append-Only** (غير قابل للتعديل أو الحذف).
-- عمليات تغيير البيانات الأساسية (`INSERT`, `UPDATE`, `DELETE`) تُسجل داخل نفس الـ Stored Procedure ونفس المعاملة (In-Transaction Audit)، مما يضمن الذرية التامة (Atomicity).
-- أحداث تسجيل الدخول (`LOGIN_SUCCESS` و `LOGIN_FAILED`) تُسجل عبر `AuthService` مع حظر تام لتسجيل كلمات المرور أو التوكنات.
+### A. Immutable Audit Trail Layer
+- The `AuditLogs` table follows an **Append-Only** pattern (no updates or deletes permitted).
+- Database mutations (`INSERT`, `UPDATE`, `DELETE`) are audited within the exact same database transaction as the business operation, guaranteeing absolute atomicity.
+- Authentication events (`LOGIN_SUCCESS`, `LOGIN_FAILED`) are logged via `AuthService` with sensitive credentials strictly excluded.
 
-### B. طبقة الـ Lookup والتخلص من الدوال غير المستخدمة
-- تم استبدال مفهوم `NoPaged` / `GetAllNotPaged` بـ **Lookup Endpoint** مخصص للأقسام (`GET /api/department/lookup`).
-- تم تطهير الـ Interfaces والـ Repositories في `RepositoryWrapper` بحيث لا يتاح أي استدعاء غير مدعوم أو غير منطقي للجدول (مثلاً: الطلاب والمستخدمون لا يملكون Lookup).
+### B. High-Performance Stored Procedures & Views
+- **Views for Queries:** All entity queries target relational views (`vw_Students`, `vw_Departments`) which join foreign keys into descriptive labels and filter soft-deleted rows (`WHERE IsDeleted = 0`).
+- **Stored Procedures for Mutations:** All data modifications are executed through dedicated Stored Procedures, preventing SQL injection and maximizing query plan reuse.
+- **Lookup Optimization:** Dropdown lists use optimized lookup endpoints (`GET /api/department/lookup`) rather than unbounded unpaginated queries.
 
-### C. طبقة التحكم بالوصول (Authorization Layer)
-- اعتماد نموذجين للأدوار: `Admin` (المدير بصلاحيات كاملة تشمل الحذف وسجلات التدقيق)، و `User` (المستخدم العادي للاستعراض والإضافة والتعديل).
-- التمييز الصارم بين `401 Unauthorized` للمجهول، و `403 Forbidden` لمن لا يملك رتبة الإجراء.
+### C. Role-Based Access Control (RBAC)
+- Clearly separated roles: `Admin` (full administrative permissions including deletions, user provisioning, and audit logs) and `User` (standard academic registrar access).
+- Strict enforcement of HTTP status codes: `401 Unauthorized` for missing/invalid authentication and `403 Forbidden` for authenticated requests lacking necessary roles.
 
-### D. هرم التحقق الثلاثي (Validation Pyramid)
-1. **FluentValidation:** فحص بنية المدخلات والقيود الشكلية قبل الوصول للخدمة.
-2. **Service Layer:** فحص قواعد العمل والتكرار عبر `IsDuplicateAsync` والتحقق من وجود القسم المرتبط.
-3. **Database Constraints:** قيود `CHECK` والمفاتيح الأجنبية والفهارس المصفاة (`WHERE IsDeleted = 0`).
+### D. Three-Tier Defense-in-Depth Validation
+1. **FluentValidation:** Validates input structure, ranges, formats, and required fields before reaching business services.
+2. **Service Layer:** Enforces domain invariants, entity uniqueness via `IsDuplicateAsync`, and relational existence (e.g., verifying referenced department exists).
+3. **Database Constraints:** Guarantees data integrity at rest using CHECK constraints, foreign keys, and unique filtered indexes (`WHERE IsDeleted = 0`).
