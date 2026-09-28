@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
-using OC_System_Training.Infrastructure.Logging;
+﻿using Microsoft.AspNetCore.Authorization;
+using Training_Project.Infrastructure.Logging;
 
-namespace OC_System_Training.Infrastructure.Middleware;
+namespace Training_Project.Infrastructure.Middleware;
 
 /// <summary>
 /// Pipeline middleware positioned between Authentication and Authorization.

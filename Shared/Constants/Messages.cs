@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Constants;
+﻿namespace Training_Project.Shared.Constants;
 
 /// <summary>
 /// Standard application message keys returned by services and localized at the controller layer.

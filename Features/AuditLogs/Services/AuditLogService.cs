@@ -1,9 +1,9 @@
-using OC_System_Training.Features.AuditLogs.Dtos;
-using OC_System_Training.Features.AuditLogs.Repositories;
-using OC_System_Training.Shared.Attributes;
-using OC_System_Training.Shared.Base.dto;
+﻿using Training_Project.Features.AuditLogs.Dtos;
+using Training_Project.Features.AuditLogs.Repositories;
+using Training_Project.Shared.Attributes;
+using Training_Project.Shared.Base.dto;
 
-namespace OC_System_Training.Features.AuditLogs.Services;
+namespace Training_Project.Features.AuditLogs.Services;
 
 /// <summary>
 /// Service implementation for administrative audit log queries.

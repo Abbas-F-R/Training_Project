@@ -1,4 +1,4 @@
--- ============================================================================
+﻿-- ============================================================================
 -- sql/MasterMigration.sql
 -- Master Database Migration Script
 -- Consolidates all feature-based database scripts in execution order:
@@ -9,18 +9,18 @@
 -- 5. Seed Data: Default departments, users, and students
 -- ============================================================================
 
--- إنشاء قاعدة البيانات إذا لم تكن موجودة
-IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'OC_System_Training_DB')
+-- Ø¥Ù†Ø´Ø§Ø¡ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø¥Ø°Ø§ Ù„Ù… ØªÙƒÙ† Ù…ÙˆØ¬ÙˆØ¯Ø©
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'Training_Project_DB')
 BEGIN
-    CREATE DATABASE [OC_System_Training_DB];
+    CREATE DATABASE [Training_Project_DB];
 END
 GO
 
-USE [OC_System_Training_DB];
+USE [Training_Project_DB];
 GO
 
 -- ============================================================================
--- الخطوة 1: جدول سجل التدقيق والتتبع (AuditLogs) والإجراءات المساعدة المشتركة
+-- Ø§Ù„Ø®Ø·ÙˆØ© 1: Ø¬Ø¯ÙˆÙ„ Ø³Ø¬Ù„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ ÙˆØ§Ù„ØªØªØ¨Ø¹ (AuditLogs) ÙˆØ§Ù„Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯Ø© Ø§Ù„Ù…Ø´ØªØ±ÙƒØ©
 -- ============================================================================
 
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AuditLogs')
@@ -76,7 +76,7 @@ BEGIN
 END
 GO
 
--- إجراء إضافة سجل تدقيق
+-- Ø¥Ø¬Ø±Ø§Ø¡ Ø¥Ø¶Ø§ÙØ© Ø³Ø¬Ù„ ØªØ¯Ù‚ÙŠÙ‚
 CREATE OR ALTER PROCEDURE AuditLogsInsert
     @UserId     BIGINT        = NULL,
     @Action     NVARCHAR(50),
@@ -101,7 +101,7 @@ BEGIN
 END
 GO
 
--- إجراء استعراض سجلات التدقيق
+-- Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ø³ØªØ¹Ø±Ø§Ø¶ Ø³Ø¬Ù„Ø§Øª Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚
 CREATE OR ALTER PROCEDURE AuditLogsGetAll
     @PageNumber INT           = 1,
     @PageSize   INT           = 20,
@@ -136,7 +136,7 @@ BEGIN
 END
 GO
 
--- فحص تكرار قيمة في عمود معين (تستخدمه IsDuplicateAsync في BaseRepository)
+-- ÙØ­Øµ ØªÙƒØ±Ø§Ø± Ù‚ÙŠÙ…Ø© ÙÙŠ Ø¹Ù…ÙˆØ¯ Ù…Ø¹ÙŠÙ† (ØªØ³ØªØ®Ø¯Ù…Ù‡ IsDuplicateAsync ÙÙŠ BaseRepository)
 CREATE OR ALTER PROCEDURE Base_CheckDuplicate
     @TableName  NVARCHAR(100),
     @ColumnName NVARCHAR(100),
@@ -161,7 +161,7 @@ BEGIN
 END
 GO
 
--- جلب أول سجل يطابق قيمة عمود (تستخدمه GetFirstAsync في BaseRepository)
+-- Ø¬Ù„Ø¨ Ø£ÙˆÙ„ Ø³Ø¬Ù„ ÙŠØ·Ø§Ø¨Ù‚ Ù‚ÙŠÙ…Ø© Ø¹Ù…ÙˆØ¯ (ØªØ³ØªØ®Ø¯Ù…Ù‡ GetFirstAsync ÙÙŠ BaseRepository)
 CREATE OR ALTER PROCEDURE Base_GetFirst
     @TableName  NVARCHAR(100),
     @ColumnName NVARCHAR(100),
@@ -179,7 +179,7 @@ END
 GO
 
 -- ============================================================================
--- الخطوة 2: ميزة الأمان والمستخدمين (Features/Auth/Sql)
+-- Ø§Ù„Ø®Ø·ÙˆØ© 2: Ù…ÙŠØ²Ø© Ø§Ù„Ø£Ù…Ø§Ù† ÙˆØ§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† (Features/Auth/Sql)
 -- ============================================================================
 
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
@@ -249,7 +249,7 @@ BEGIN
 
     SET @NewId = SCOPE_IDENTITY();
 
-    -- تسجيل التدقيق بدون حفظ كلمة المرور
+    -- ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ Ø¨Ø¯ÙˆÙ† Ø­ÙØ¸ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±
     INSERT INTO AuditLogs (UserId, Action, EntityName, EntityId, Changes, IsSuccess, CreatedAt)
     VALUES (
         @CreatedBy,
@@ -267,7 +267,7 @@ END
 GO
 
 -- ============================================================================
--- الخطوة 3: ميزة الأقسام الدراسية (Features/Departments/Sql)
+-- Ø§Ù„Ø®Ø·ÙˆØ© 3: Ù…ÙŠØ²Ø© Ø§Ù„Ø£Ù‚Ø³Ø§Ù… Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠØ© (Features/Departments/Sql)
 -- ============================================================================
 
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Departments')
@@ -454,7 +454,7 @@ END
 GO
 
 -- ============================================================================
--- الخطوة 4: ميزة الطلاب (Features/Students/Sql)
+-- Ø§Ù„Ø®Ø·ÙˆØ© 4: Ù…ÙŠØ²Ø© Ø§Ù„Ø·Ù„Ø§Ø¨ (Features/Students/Sql)
 -- ============================================================================
 
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Students')
@@ -698,24 +698,24 @@ END
 GO
 
 -- ============================================================================
--- الخطوة 5: البيانات الأولية التجريبية (Infrastructure/Persistence/Sql)
+-- Ø§Ù„Ø®Ø·ÙˆØ© 5: Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø£ÙˆÙ„ÙŠØ© Ø§Ù„ØªØ¬Ø±ÙŠØ¨ÙŠØ© (Infrastructure/Persistence/Sql)
 -- ============================================================================
 
 IF NOT EXISTS (SELECT 1 FROM Departments WHERE Code = 'CS')
     INSERT INTO Departments (Name, Code, IsDeleted, CreatedBy, CreatedAt)
-    VALUES (N'علوم الحاسوب (Computer Science)', 'CS', 0, 1, GETDATE());
+    VALUES (N'Ø¹Ù„ÙˆÙ… Ø§Ù„Ø­Ø§Ø³ÙˆØ¨ (Computer Science)', 'CS', 0, 1, GETDATE());
 
 IF NOT EXISTS (SELECT 1 FROM Departments WHERE Code = 'SE')
     INSERT INTO Departments (Name, Code, IsDeleted, CreatedBy, CreatedAt)
-    VALUES (N'هندسة البرمجيات (Software Engineering)', 'SE', 0, 1, GETDATE());
+    VALUES (N'Ù‡Ù†Ø¯Ø³Ø© Ø§Ù„Ø¨Ø±Ù…Ø¬ÙŠØ§Øª (Software Engineering)', 'SE', 0, 1, GETDATE());
 
 IF NOT EXISTS (SELECT 1 FROM Departments WHERE Code = 'IS')
     INSERT INTO Departments (Name, Code, IsDeleted, CreatedBy, CreatedAt)
-    VALUES (N'نظم المعلومات (Information Systems)', 'IS', 0, 1, GETDATE());
+    VALUES (N'Ù†Ø¸Ù… Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª (Information Systems)', 'IS', 0, 1, GETDATE());
 
 IF NOT EXISTS (SELECT 1 FROM Departments WHERE Code = 'AI')
     INSERT INTO Departments (Name, Code, IsDeleted, CreatedBy, CreatedAt)
-    VALUES (N'الذكاء الاصطناعي (Artificial Intelligence)', 'AI', 0, 1, GETDATE());
+    VALUES (N'Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ (Artificial Intelligence)', 'AI', 0, 1, GETDATE());
 GO
 
 DECLARE @CsId BIGINT = (SELECT TOP 1 Id FROM Departments WHERE Code = 'CS');
@@ -724,17 +724,17 @@ DECLARE @IsId BIGINT = (SELECT TOP 1 Id FROM Departments WHERE Code = 'IS');
 
 IF NOT EXISTS (SELECT 1 FROM Students WHERE StudentCode = 'STU-2026-001')
     INSERT INTO Students (FullName, StudentCode, Email, PhoneNumber, DepartmentId, Stage, BirthDate, IsDeleted, CreatedBy, CreatedAt)
-    VALUES (N'علي أحمد حسن', 'STU-2026-001', 'ali.ahmed@univ.edu', '07701234567', @CsId, 3, '2003-05-14', 0, 1, GETDATE());
+    VALUES (N'Ø¹Ù„ÙŠ Ø£Ø­Ù…Ø¯ Ø­Ø³Ù†', 'STU-2026-001', 'ali.ahmed@univ.edu', '07701234567', @CsId, 3, '2003-05-14', 0, 1, GETDATE());
 
 IF NOT EXISTS (SELECT 1 FROM Students WHERE StudentCode = 'STU-2026-002')
     INSERT INTO Students (FullName, StudentCode, Email, PhoneNumber, DepartmentId, Stage, BirthDate, IsDeleted, CreatedBy, CreatedAt)
-    VALUES (N'فاطمة حيدر كاظم', 'STU-2026-002', 'fatima.haidar@univ.edu', '07802345678', @SeId, 4, '2002-11-20', 0, 1, GETDATE());
+    VALUES (N'ÙØ§Ø·Ù…Ø© Ø­ÙŠØ¯Ø± ÙƒØ§Ø¸Ù…', 'STU-2026-002', 'fatima.haidar@univ.edu', '07802345678', @SeId, 4, '2002-11-20', 0, 1, GETDATE());
 
 IF NOT EXISTS (SELECT 1 FROM Students WHERE StudentCode = 'STU-2026-003')
     INSERT INTO Students (FullName, StudentCode, Email, PhoneNumber, DepartmentId, Stage, BirthDate, IsDeleted, CreatedBy, CreatedAt)
-    VALUES (N'حسين محمد جواد', 'STU-2026-003', 'hussein.m@univ.edu', '07903456789', @IsId, 2, '2004-02-10', 0, 1, GETDATE());
+    VALUES (N'Ø­Ø³ÙŠÙ† Ù…Ø­Ù…Ø¯ Ø¬ÙˆØ§Ø¯', 'STU-2026-003', 'hussein.m@univ.edu', '07903456789', @IsId, 2, '2004-02-10', 0, 1, GETDATE());
 
 IF NOT EXISTS (SELECT 1 FROM Students WHERE StudentCode = 'STU-2026-004')
     INSERT INTO Students (FullName, StudentCode, Email, PhoneNumber, DepartmentId, Stage, BirthDate, IsDeleted, CreatedBy, CreatedAt)
-    VALUES (N'زينب عباس كريم', 'STU-2026-004', 'zainab.a@univ.edu', '07704567890', @CsId, 1, '2005-08-25', 0, 1, GETDATE());
+    VALUES (N'Ø²ÙŠÙ†Ø¨ Ø¹Ø¨Ø§Ø³ ÙƒØ±ÙŠÙ…', 'STU-2026-004', 'zainab.a@univ.edu', '07704567890', @CsId, 1, '2005-08-25', 0, 1, GETDATE());
 GO

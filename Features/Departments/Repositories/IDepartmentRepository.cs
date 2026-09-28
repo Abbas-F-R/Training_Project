@@ -1,7 +1,7 @@
-using OC_System_Training.Features.Departments.Dtos;
-using OC_System_Training.Infrastructure.Persistence.Repositories.BaseRepository;
+﻿using Training_Project.Features.Departments.Dtos;
+using Training_Project.Infrastructure.Persistence.Repositories.BaseRepository;
 
-namespace OC_System_Training.Features.Departments.Repositories;
+namespace Training_Project.Features.Departments.Repositories;
 
 /// <summary>
 /// Data-access repository contract for department entities and dropdown lookup.

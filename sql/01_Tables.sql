@@ -1,14 +1,14 @@
--- ============================================================================
+﻿-- ============================================================================
 -- 01_Tables.sql
 -- Student Management System Database Schema
 -- Core Tables, Filtered Indexes, and Integrity Constraints
 -- ============================================================================
 
-USE [OC_System_Training_DB];
+USE [Training_Project_DB];
 GO
 
 -- ============================================================================
--- 1. جدول سجل التدقيق والتتبع (AuditLogs) - غير قابل للتعديل (Append-Only)
+-- 1. Ø¬Ø¯ÙˆÙ„ Ø³Ø¬Ù„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ ÙˆØ§Ù„ØªØªØ¨Ø¹ (AuditLogs) - ØºÙŠØ± Ù‚Ø§Ø¨Ù„ Ù„Ù„ØªØ¹Ø¯ÙŠÙ„ (Append-Only)
 -- ============================================================================
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AuditLogs')
 BEGIN
@@ -30,7 +30,7 @@ BEGIN
 END
 GO
 
--- فهارس تحسين أداء استعلامات التدقيق
+-- ÙÙ‡Ø§Ø±Ø³ ØªØ­Ø³ÙŠÙ† Ø£Ø¯Ø§Ø¡ Ø§Ø³ØªØ¹Ù„Ø§Ù…Ø§Øª Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_AuditLogs_Entity' AND object_id = OBJECT_ID('AuditLogs'))
 BEGIN
     CREATE NONCLUSTERED INDEX IX_AuditLogs_Entity
@@ -65,7 +65,7 @@ END
 GO
 
 -- ============================================================================
--- 2. جدول المستخدمين (Users) لتسجيل الدخول والمصادقة (Authentication)
+-- 2. Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† (Users) Ù„ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ ÙˆØ§Ù„Ù…ØµØ§Ø¯Ù‚Ø© (Authentication)
 -- ============================================================================
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
 BEGIN
@@ -90,7 +90,7 @@ BEGIN
 END
 GO
 
--- فهرس فريد مصفى لاسم المستخدم (يسمح بإعادة استخدام الاسم إذا حُذف الحساب منطقياً)
+-- ÙÙ‡Ø±Ø³ ÙØ±ÙŠØ¯ Ù…ØµÙÙ‰ Ù„Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… (ÙŠØ³Ù…Ø­ Ø¨Ø¥Ø¹Ø§Ø¯Ø© Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„Ø§Ø³Ù… Ø¥Ø°Ø§ Ø­ÙØ°Ù Ø§Ù„Ø­Ø³Ø§Ø¨ Ù…Ù†Ø·Ù‚ÙŠØ§Ù‹)
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'UQ_Users_UserName_Active' AND object_id = OBJECT_ID('Users'))
 BEGIN
     CREATE UNIQUE NONCLUSTERED INDEX UQ_Users_UserName_Active
@@ -109,7 +109,7 @@ END
 GO
 
 -- ============================================================================
--- 3. جدول الأقسام الدراسية (Departments)
+-- 3. Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ø£Ù‚Ø³Ø§Ù… Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠØ© (Departments)
 -- ============================================================================
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Departments')
 BEGIN
@@ -131,7 +131,7 @@ BEGIN
 END
 GO
 
--- فهرس فريد مصفى لكود القسم (يسمح بإعادة استخدام الكود عند الحذف المنطقي)
+-- ÙÙ‡Ø±Ø³ ÙØ±ÙŠØ¯ Ù…ØµÙÙ‰ Ù„ÙƒÙˆØ¯ Ø§Ù„Ù‚Ø³Ù… (ÙŠØ³Ù…Ø­ Ø¨Ø¥Ø¹Ø§Ø¯Ø© Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„ÙƒÙˆØ¯ Ø¹Ù†Ø¯ Ø§Ù„Ø­Ø°Ù Ø§Ù„Ù…Ù†Ø·Ù‚ÙŠ)
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'UQ_Departments_Code_Active' AND object_id = OBJECT_ID('Departments'))
 BEGIN
     CREATE UNIQUE NONCLUSTERED INDEX UQ_Departments_Code_Active
@@ -141,7 +141,7 @@ END
 GO
 
 -- ============================================================================
--- 4. جدول الطلاب (Students)
+-- 4. Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ø·Ù„Ø§Ø¨ (Students)
 -- ============================================================================
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Students')
 BEGIN
@@ -170,7 +170,7 @@ BEGIN
 END
 GO
 
--- فهرس فريد مصفى لكود الطالب
+-- ÙÙ‡Ø±Ø³ ÙØ±ÙŠØ¯ Ù…ØµÙÙ‰ Ù„ÙƒÙˆØ¯ Ø§Ù„Ø·Ø§Ù„Ø¨
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'UQ_Students_StudentCode_Active' AND object_id = OBJECT_ID('Students'))
 BEGIN
     CREATE UNIQUE NONCLUSTERED INDEX UQ_Students_StudentCode_Active
@@ -179,7 +179,7 @@ BEGIN
 END
 GO
 
--- فهرس لتسريع الربط بين الطلاب والأقسام
+-- ÙÙ‡Ø±Ø³ Ù„ØªØ³Ø±ÙŠØ¹ Ø§Ù„Ø±Ø¨Ø· Ø¨ÙŠÙ† Ø§Ù„Ø·Ù„Ø§Ø¨ ÙˆØ§Ù„Ø£Ù‚Ø³Ø§Ù…
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Students_DepartmentId' AND object_id = OBJECT_ID('Students'))
 BEGIN
     CREATE NONCLUSTERED INDEX IX_Students_DepartmentId

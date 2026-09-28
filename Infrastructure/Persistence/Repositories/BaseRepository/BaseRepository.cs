@@ -1,10 +1,10 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
 using Dapper;
-using OC_System_Training.Shared.Attributes;
+using Training_Project.Shared.Attributes;
 
-namespace OC_System_Training.Infrastructure.Persistence.Repositories.BaseRepository;
+namespace Training_Project.Infrastructure.Persistence.Repositories.BaseRepository;
 
 /// <summary>
 /// Cached reflection metadata for DTO properties to eliminate repetitive reflection overhead per request.

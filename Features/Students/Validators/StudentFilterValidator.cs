@@ -1,7 +1,7 @@
-using FluentValidation;
-using OC_System_Training.Features.Students.Dtos;
+﻿using FluentValidation;
+using Training_Project.Features.Students.Dtos;
 
-namespace OC_System_Training.Features.Students.Validators;
+namespace Training_Project.Features.Students.Validators;
 
 /// <summary>
 /// Validator for student pagination and filter criteria.

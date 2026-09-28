@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Enums;
+﻿namespace Training_Project.Shared.Enums;
 
 /// <summary>
 /// Supported message localization languages.

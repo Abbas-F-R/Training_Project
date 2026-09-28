@@ -1,10 +1,10 @@
-using OC_System_Training.Features.Students.Dtos;
-using OC_System_Training.Infrastructure.Persistence.Repositories.RepositoryWrapper;
-using OC_System_Training.Shared.Attributes;
-using OC_System_Training.Shared.Base.dto;
-using OC_System_Training.Shared.Constants;
+﻿using Training_Project.Features.Students.Dtos;
+using Training_Project.Infrastructure.Persistence.Repositories.RepositoryWrapper;
+using Training_Project.Shared.Attributes;
+using Training_Project.Shared.Base.dto;
+using Training_Project.Shared.Constants;
 
-namespace OC_System_Training.Features.Students.Services;
+namespace Training_Project.Features.Students.Services;
 
 /// <summary>
 /// Student service orchestrating student business logic, department foreign-key validation,

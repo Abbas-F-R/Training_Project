@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Serilog.Context;
 
-namespace OC_System_Training.Infrastructure.Logging;
+namespace Training_Project.Infrastructure.Logging;
 
 /// <summary>
 /// Extension methods enriching standard <see cref="ILogger"/> instances with structured

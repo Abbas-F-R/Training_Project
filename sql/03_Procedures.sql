@@ -1,17 +1,17 @@
--- ============================================================================
+﻿-- ============================================================================
 -- 03_Procedures.sql
 -- Student Management System Stored Procedures
 -- High-Performance CRUD Operations with Atomic In-Transaction Auditing
 -- ============================================================================
 
-USE [OC_System_Training_DB];
+USE [Training_Project_DB];
 GO
 
 -- ============================================================================
--- 1. الإجراءات المساعدة للنظام الأساسي (Base Helper Procedures)
+-- 1. Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯Ø© Ù„Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ (Base Helper Procedures)
 -- ============================================================================
 
--- فحص تكرار قيمة في عمود معين (تستخدمه IsDuplicateAsync)
+-- ÙØ­Øµ ØªÙƒØ±Ø§Ø± Ù‚ÙŠÙ…Ø© ÙÙŠ Ø¹Ù…ÙˆØ¯ Ù…Ø¹ÙŠÙ† (ØªØ³ØªØ®Ø¯Ù…Ù‡ IsDuplicateAsync)
 CREATE OR ALTER PROCEDURE Base_CheckDuplicate
     @TableName NVARCHAR(100),
     @ColumnName NVARCHAR(100),
@@ -36,7 +36,7 @@ BEGIN
 END
 GO
 
--- جلب أول سجل يطابق قيمة عمود (تستخدمه GetFirstAsync)
+-- Ø¬Ù„Ø¨ Ø£ÙˆÙ„ Ø³Ø¬Ù„ ÙŠØ·Ø§Ø¨Ù‚ Ù‚ÙŠÙ…Ø© Ø¹Ù…ÙˆØ¯ (ØªØ³ØªØ®Ø¯Ù…Ù‡ GetFirstAsync)
 CREATE OR ALTER PROCEDURE Base_GetFirst
     @TableName NVARCHAR(100),
     @ColumnName NVARCHAR(100),
@@ -54,10 +54,10 @@ END
 GO
 
 -- ============================================================================
--- 2. إجراءات سجل التدقيق والتتبع (AuditLogs Procedures)
+-- 2. Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª Ø³Ø¬Ù„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ ÙˆØ§Ù„ØªØªØ¨Ø¹ (AuditLogs Procedures)
 -- ============================================================================
 
--- إضافة سجل تدقيق جديد (تستخدمها الخدمات وتدقيق الدخول)
+-- Ø¥Ø¶Ø§ÙØ© Ø³Ø¬Ù„ ØªØ¯Ù‚ÙŠÙ‚ Ø¬Ø¯ÙŠØ¯ (ØªØ³ØªØ®Ø¯Ù…Ù‡Ø§ Ø§Ù„Ø®Ø¯Ù…Ø§Øª ÙˆØªØ¯Ù‚ÙŠÙ‚ Ø§Ù„Ø¯Ø®ÙˆÙ„)
 CREATE OR ALTER PROCEDURE AuditLogsInsert
     @UserId     BIGINT        = NULL,
     @Action     NVARCHAR(50),
@@ -93,7 +93,7 @@ BEGIN
 END
 GO
 
--- استعراض سجلات التدقيق بنظام الصفحات مع الفلترة (خاصة بالمسؤول Admin)
+-- Ø§Ø³ØªØ¹Ø±Ø§Ø¶ Ø³Ø¬Ù„Ø§Øª Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ Ø¨Ù†Ø¸Ø§Ù… Ø§Ù„ØµÙØ­Ø§Øª Ù…Ø¹ Ø§Ù„ÙÙ„ØªØ±Ø© (Ø®Ø§ØµØ© Ø¨Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„ Admin)
 CREATE OR ALTER PROCEDURE AuditLogsGetAll
     @PageNumber INT           = 1,
     @PageSize   INT           = 20,
@@ -107,7 +107,7 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
 
-    -- النتيجة 1: إجمالي عدد السجلات المطابقة
+    -- Ø§Ù„Ù†ØªÙŠØ¬Ø© 1: Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø¹Ø¯Ø¯ Ø§Ù„Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ù…Ø·Ø§Ø¨Ù‚Ø©
     SELECT COUNT(*) AS TotalCount
     FROM AuditLogs
     WHERE (@EntityName IS NULL OR EntityName = @EntityName)
@@ -116,7 +116,7 @@ BEGIN
       AND (@FromDate IS NULL OR CreatedAt >= @FromDate)
       AND (@ToDate IS NULL OR CreatedAt <= @ToDate);
 
-    -- النتيجة 2: بيانات الصفحة المطلوبة
+    -- Ø§Ù„Ù†ØªÙŠØ¬Ø© 2: Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø©
     SELECT 
         Id,
         UserId,
@@ -141,10 +141,10 @@ END
 GO
 
 -- ============================================================================
--- 3. إجراءات الأقسام الدراسية (Departments Stored Procedures)
+-- 3. Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª Ø§Ù„Ø£Ù‚Ø³Ø§Ù… Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠØ© (Departments Stored Procedures)
 -- ============================================================================
 
--- جلب قسم بالمعرف
+-- Ø¬Ù„Ø¨ Ù‚Ø³Ù… Ø¨Ø§Ù„Ù…Ø¹Ø±Ù
 CREATE OR ALTER PROCEDURE DepartmentsGetById
     @Id BIGINT
 AS
@@ -154,7 +154,7 @@ BEGIN
 END
 GO
 
--- جلب الأقسام بنظام الصفحات (Pagination) - يرجع TotalCount ثم البيانات
+-- Ø¬Ù„Ø¨ Ø§Ù„Ø£Ù‚Ø³Ø§Ù… Ø¨Ù†Ø¸Ø§Ù… Ø§Ù„ØµÙØ­Ø§Øª (Pagination) - ÙŠØ±Ø¬Ø¹ TotalCount Ø«Ù… Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª
 CREATE OR ALTER PROCEDURE DepartmentsGetAll
     @PageNumber INT = 1,
     @PageSize   INT = 10,
@@ -165,13 +165,13 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
 
-    -- النتيجة 1: إجمالي السجلات المطابقة
+    -- Ø§Ù„Ù†ØªÙŠØ¬Ø© 1: Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ù…Ø·Ø§Ø¨Ù‚Ø©
     SELECT COUNT(*) AS TotalCount
     FROM vw_Departments
     WHERE (@Name IS NULL OR Name LIKE N'%' + @Name + N'%')
       AND (@Code IS NULL OR Code LIKE N'%' + @Code + N'%');
 
-    -- النتيجة 2: بيانات الصفحة المحددة
+    -- Ø§Ù„Ù†ØªÙŠØ¬Ø© 2: Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ù…Ø­Ø¯Ø¯Ø©
     SELECT *
     FROM vw_Departments
     WHERE (@Name IS NULL OR Name LIKE N'%' + @Name + N'%')
@@ -182,7 +182,7 @@ BEGIN
 END
 GO
 
--- جلب الأقسام كـ Lookup للقوائم المنسدلة (بديل NotPaged)
+-- Ø¬Ù„Ø¨ Ø§Ù„Ø£Ù‚Ø³Ø§Ù… ÙƒÙ€ Lookup Ù„Ù„Ù‚ÙˆØ§Ø¦Ù… Ø§Ù„Ù…Ù†Ø³Ø¯Ù„Ø© (Ø¨Ø¯ÙŠÙ„ NotPaged)
 CREATE OR ALTER PROCEDURE DepartmentsLookup
 AS
 BEGIN
@@ -193,7 +193,7 @@ BEGIN
 END
 GO
 
--- إضافة قسم جديد (مع تسجيل Audit Log في نفس المعاملة الذرية)
+-- Ø¥Ø¶Ø§ÙØ© Ù‚Ø³Ù… Ø¬Ø¯ÙŠØ¯ (Ù…Ø¹ ØªØ³Ø¬ÙŠÙ„ Audit Log ÙÙŠ Ù†ÙØ³ Ø§Ù„Ù…Ø¹Ø§Ù…Ù„Ø© Ø§Ù„Ø°Ø±ÙŠØ©)
 CREATE OR ALTER PROCEDURE DepartmentsInsert
     @Name      NVARCHAR(100),
     @Code      NVARCHAR(20),
@@ -203,13 +203,13 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @NewId BIGINT;
 
-    -- 1. إدخال القسم
+    -- 1. Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ù‚Ø³Ù…
     INSERT INTO Departments (Name, Code, IsDeleted, CreatedBy, CreatedAt)
     VALUES (@Name, @Code, 0, @CreatedBy, GETDATE());
 
     SET @NewId = SCOPE_IDENTITY();
 
-    -- 2. تسجيل التدقيق (ضمن نفس المعاملة الذرية)
+    -- 2. ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ (Ø¶Ù…Ù† Ù†ÙØ³ Ø§Ù„Ù…Ø¹Ø§Ù…Ù„Ø© Ø§Ù„Ø°Ø±ÙŠØ©)
     INSERT INTO AuditLogs (UserId, Action, EntityName, EntityId, Changes, IsSuccess, CreatedAt)
     VALUES (
         @CreatedBy,
@@ -225,7 +225,7 @@ BEGIN
 END
 GO
 
--- تعديل بيانات قسم (مع تسجيل Audit Log في نفس المعاملة الذرية)
+-- ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ù‚Ø³Ù… (Ù…Ø¹ ØªØ³Ø¬ÙŠÙ„ Audit Log ÙÙŠ Ù†ÙØ³ Ø§Ù„Ù…Ø¹Ø§Ù…Ù„Ø© Ø§Ù„Ø°Ø±ÙŠØ©)
 CREATE OR ALTER PROCEDURE DepartmentsUpdate
     @Id        BIGINT,
     @Name      NVARCHAR(100),
@@ -235,7 +235,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- 1. تحديث بيانات القسم
+    -- 1. ØªØ­Ø¯ÙŠØ« Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù‚Ø³Ù…
     UPDATE Departments
     SET Name      = @Name,
         Code      = @Code,
@@ -243,7 +243,7 @@ BEGIN
         UpdatedAt = GETDATE()
     WHERE Id = @Id AND IsDeleted = 0;
 
-    -- 2. تسجيل التدقيق
+    -- 2. ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚
     INSERT INTO AuditLogs (UserId, Action, EntityName, EntityId, Changes, IsSuccess, CreatedAt)
     VALUES (
         @UpdatedBy,
@@ -259,7 +259,7 @@ BEGIN
 END
 GO
 
--- حذف قسم (حذف منطقي Soft Delete مع تسجيل التدقيق)
+-- Ø­Ø°Ù Ù‚Ø³Ù… (Ø­Ø°Ù Ù…Ù†Ø·Ù‚ÙŠ Soft Delete Ù…Ø¹ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚)
 CREATE OR ALTER PROCEDURE DepartmentsDelete
     @Id     BIGINT,
     @UserId BIGINT
@@ -267,14 +267,14 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- 1. الحذف المنطقي
+    -- 1. Ø§Ù„Ø­Ø°Ù Ø§Ù„Ù…Ù†Ø·Ù‚ÙŠ
     UPDATE Departments
     SET IsDeleted = 1,
         UpdatedBy = @UserId,
         UpdatedAt = GETDATE()
     WHERE Id = @Id AND IsDeleted = 0;
 
-    -- 2. تسجيل التدقيق
+    -- 2. ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚
     INSERT INTO AuditLogs (UserId, Action, EntityName, EntityId, Changes, IsSuccess, CreatedAt)
     VALUES (
         @UserId,
@@ -291,10 +291,10 @@ END
 GO
 
 -- ============================================================================
--- 4. إجراءات الطلاب (Students Stored Procedures)
+-- 4. Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª Ø§Ù„Ø·Ù„Ø§Ø¨ (Students Stored Procedures)
 -- ============================================================================
 
--- جلب طالب بالمعرف
+-- Ø¬Ù„Ø¨ Ø·Ø§Ù„Ø¨ Ø¨Ø§Ù„Ù…Ø¹Ø±Ù
 CREATE OR ALTER PROCEDURE StudentsGetById
     @Id BIGINT
 AS
@@ -304,7 +304,7 @@ BEGIN
 END
 GO
 
--- جلب الطلاب بنظام الصفحات (Pagination) - يرجع TotalCount ثم البيانات
+-- Ø¬Ù„Ø¨ Ø§Ù„Ø·Ù„Ø§Ø¨ Ø¨Ù†Ø¸Ø§Ù… Ø§Ù„ØµÙØ­Ø§Øª (Pagination) - ÙŠØ±Ø¬Ø¹ TotalCount Ø«Ù… Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª
 CREATE OR ALTER PROCEDURE StudentsGetAll
     @PageNumber   INT = 1,
     @PageSize     INT = 10,
@@ -317,7 +317,7 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @Offset INT = (@PageNumber - 1) * @PageSize;
 
-    -- النتيجة 1: إجمالي السجلات المطابقة للتصفية
+    -- Ø§Ù„Ù†ØªÙŠØ¬Ø© 1: Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ù…Ø·Ø§Ø¨Ù‚Ø© Ù„Ù„ØªØµÙÙŠØ©
     SELECT COUNT(*) AS TotalCount
     FROM vw_Students
     WHERE (@FullName IS NULL OR FullName LIKE N'%' + @FullName + N'%')
@@ -325,7 +325,7 @@ BEGIN
       AND (@DepartmentId IS NULL OR DepartmentId = @DepartmentId)
       AND (@Stage IS NULL OR Stage = @Stage);
 
-    -- النتيجة 2: بيانات الصفحة الحالية
+    -- Ø§Ù„Ù†ØªÙŠØ¬Ø© 2: Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„ØµÙØ­Ø© Ø§Ù„Ø­Ø§Ù„ÙŠØ©
     SELECT *
     FROM vw_Students
     WHERE (@FullName IS NULL OR FullName LIKE N'%' + @FullName + N'%')
@@ -338,7 +338,7 @@ BEGIN
 END
 GO
 
--- إضافة طالب جديد (مع تسجيل التدقيق ضمن نفس المعاملة الذرية)
+-- Ø¥Ø¶Ø§ÙØ© Ø·Ø§Ù„Ø¨ Ø¬Ø¯ÙŠØ¯ (Ù…Ø¹ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ Ø¶Ù…Ù† Ù†ÙØ³ Ø§Ù„Ù…Ø¹Ø§Ù…Ù„Ø© Ø§Ù„Ø°Ø±ÙŠØ©)
 CREATE OR ALTER PROCEDURE StudentsInsert
     @FullName     NVARCHAR(150),
     @StudentCode  NVARCHAR(50),
@@ -353,13 +353,13 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @NewId BIGINT;
 
-    -- 1. إدخال الطالب
+    -- 1. Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø·Ø§Ù„Ø¨
     INSERT INTO Students (FullName, StudentCode, Email, PhoneNumber, DepartmentId, Stage, BirthDate, IsDeleted, CreatedBy, CreatedAt)
     VALUES (@FullName, @StudentCode, @Email, @PhoneNumber, @DepartmentId, @Stage, @BirthDate, 0, @CreatedBy, GETDATE());
 
     SET @NewId = SCOPE_IDENTITY();
 
-    -- 2. تسجيل التدقيق (ضمن نفس المعاملة الذرية)
+    -- 2. ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ (Ø¶Ù…Ù† Ù†ÙØ³ Ø§Ù„Ù…Ø¹Ø§Ù…Ù„Ø© Ø§Ù„Ø°Ø±ÙŠØ©)
     INSERT INTO AuditLogs (UserId, Action, EntityName, EntityId, Changes, IsSuccess, CreatedAt)
     VALUES (
         @CreatedBy,
@@ -381,7 +381,7 @@ BEGIN
 END
 GO
 
--- تعديل بيانات طالب (مع تسجيل التدقيق ضمن نفس المعاملة الذرية)
+-- ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø·Ø§Ù„Ø¨ (Ù…Ø¹ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ Ø¶Ù…Ù† Ù†ÙØ³ Ø§Ù„Ù…Ø¹Ø§Ù…Ù„Ø© Ø§Ù„Ø°Ø±ÙŠØ©)
 CREATE OR ALTER PROCEDURE StudentsUpdate
     @Id           BIGINT,
     @FullName     NVARCHAR(150),
@@ -396,7 +396,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- 1. تحديث الطالب
+    -- 1. ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø·Ø§Ù„Ø¨
     UPDATE Students
     SET FullName     = @FullName,
         StudentCode  = @StudentCode,
@@ -409,7 +409,7 @@ BEGIN
         UpdatedAt    = GETDATE()
     WHERE Id = @Id AND IsDeleted = 0;
 
-    -- 2. تسجيل التدقيق
+    -- 2. ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚
     INSERT INTO AuditLogs (UserId, Action, EntityName, EntityId, Changes, IsSuccess, CreatedAt)
     VALUES (
         @UpdatedBy,
@@ -431,7 +431,7 @@ BEGIN
 END
 GO
 
--- حذف طالب (حذف منطقي Soft Delete مع تسجيل التدقيق)
+-- Ø­Ø°Ù Ø·Ø§Ù„Ø¨ (Ø­Ø°Ù Ù…Ù†Ø·Ù‚ÙŠ Soft Delete Ù…Ø¹ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚)
 CREATE OR ALTER PROCEDURE StudentsDelete
     @Id     BIGINT,
     @UserId BIGINT
@@ -439,14 +439,14 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- 1. الحذف المنطقي
+    -- 1. Ø§Ù„Ø­Ø°Ù Ø§Ù„Ù…Ù†Ø·Ù‚ÙŠ
     UPDATE Students
     SET IsDeleted = 1,
         UpdatedBy = @UserId,
         UpdatedAt = GETDATE()
     WHERE Id = @Id AND IsDeleted = 0;
 
-    -- 2. تسجيل التدقيق
+    -- 2. ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚
     INSERT INTO AuditLogs (UserId, Action, EntityName, EntityId, Changes, IsSuccess, CreatedAt)
     VALUES (
         @UserId,
@@ -463,11 +463,11 @@ END
 GO
 
 -- ============================================================================
--- 5. إجراءات المستخدمين والمصادقة (Users & Auth Stored Procedures)
+-- 5. Ø¥Ø¬Ø±Ø§Ø¡Ø§Øª Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† ÙˆØ§Ù„Ù…ØµØ§Ø¯Ù‚Ø© (Users & Auth Stored Procedures)
 -- ============================================================================
 
--- جلب مستخدم باسم المستخدم
--- تم إزالة شرط IsActive = 1 لتمكين طبقة الخدمة من فحص حالة الحساب وإرجاع رسالة "الحساب معطل"
+-- Ø¬Ù„Ø¨ Ù…Ø³ØªØ®Ø¯Ù… Ø¨Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…
+-- ØªÙ… Ø¥Ø²Ø§Ù„Ø© Ø´Ø±Ø· IsActive = 1 Ù„ØªÙ…ÙƒÙŠÙ† Ø·Ø¨Ù‚Ø© Ø§Ù„Ø®Ø¯Ù…Ø© Ù…Ù† ÙØ­Øµ Ø­Ø§Ù„Ø© Ø§Ù„Ø­Ø³Ø§Ø¨ ÙˆØ¥Ø±Ø¬Ø§Ø¹ Ø±Ø³Ø§Ù„Ø© "Ø§Ù„Ø­Ø³Ø§Ø¨ Ù…Ø¹Ø·Ù„"
 CREATE OR ALTER PROCEDURE UsersGetByUserName
     @UserName NVARCHAR(100)
 AS
@@ -479,7 +479,7 @@ BEGIN
 END
 GO
 
--- إنشاء مستخدم جديد (مع تسجيل التدقيق وتجنب حفظ كلمة المرور في التدقيق)
+-- Ø¥Ù†Ø´Ø§Ø¡ Ù…Ø³ØªØ®Ø¯Ù… Ø¬Ø¯ÙŠØ¯ (Ù…Ø¹ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ ÙˆØªØ¬Ù†Ø¨ Ø­ÙØ¸ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙÙŠ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚)
 CREATE OR ALTER PROCEDURE UsersInsert
     @FullName     NVARCHAR(150),
     @UserName     NVARCHAR(100),
@@ -491,13 +491,13 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @NewId BIGINT;
 
-    -- 1. إضافة المستخدم
+    -- 1. Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…
     INSERT INTO Users (FullName, UserName, PasswordHash, Role, IsActive, IsDeleted, CreatedBy, CreatedAt)
     VALUES (@FullName, @UserName, @PasswordHash, @Role, 1, 0, @CreatedBy, GETDATE());
 
     SET @NewId = SCOPE_IDENTITY();
 
-    -- 2. تسجيل التدقيق (ملاحظة: لا نقوم بتسجيل PasswordHash نهائياً لحماية الأمان)
+    -- 2. ØªØ³Ø¬ÙŠÙ„ Ø§Ù„ØªØ¯Ù‚ÙŠÙ‚ (Ù…Ù„Ø§Ø­Ø¸Ø©: Ù„Ø§ Ù†Ù‚ÙˆÙ… Ø¨ØªØ³Ø¬ÙŠÙ„ PasswordHash Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹ Ù„Ø­Ù…Ø§ÙŠØ© Ø§Ù„Ø£Ù…Ø§Ù†)
     INSERT INTO AuditLogs (UserId, Action, EntityName, EntityId, Changes, IsSuccess, CreatedAt)
     VALUES (
         @CreatedBy,

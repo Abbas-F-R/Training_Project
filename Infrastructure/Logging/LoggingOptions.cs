@@ -1,4 +1,4 @@
-namespace OC_System_Training.Infrastructure.Logging;
+﻿namespace Training_Project.Infrastructure.Logging;
 
 /// <summary>
 /// Strong-typed configuration options for the file-based logging infrastructure.

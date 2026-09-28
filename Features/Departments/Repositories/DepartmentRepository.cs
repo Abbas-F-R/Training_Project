@@ -1,12 +1,12 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
-using OC_System_Training.Features.Departments.Dtos;
-using OC_System_Training.Infrastructure.Persistence;
-using OC_System_Training.Infrastructure.Persistence.Repositories.BaseRepository;
-using OC_System_Training.Shared.Attributes;
-using OC_System_Training.Shared.Constants;
+using Training_Project.Features.Departments.Dtos;
+using Training_Project.Infrastructure.Persistence;
+using Training_Project.Infrastructure.Persistence.Repositories.BaseRepository;
+using Training_Project.Shared.Attributes;
+using Training_Project.Shared.Constants;
 
-namespace OC_System_Training.Features.Departments.Repositories;
+namespace Training_Project.Features.Departments.Repositories;
 
 /// <summary>
 /// Department repository implementing base CRUD and custom lookup queries using Dapper.

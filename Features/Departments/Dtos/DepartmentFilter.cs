@@ -1,6 +1,6 @@
-using OC_System_Training.Shared.Base.dto;
+﻿using Training_Project.Shared.Base.dto;
 
-namespace OC_System_Training.Features.Departments.Dtos;
+namespace Training_Project.Features.Departments.Dtos;
 
 /// <summary>
 /// Query filter and pagination parameters for department listings.

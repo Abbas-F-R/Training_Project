@@ -1,4 +1,4 @@
-namespace OC_System_Training.Infrastructure.Persistence.Repositories.BaseRepository;
+﻿namespace Training_Project.Infrastructure.Persistence.Repositories.BaseRepository;
 
 /// <summary>
 /// Generic repository interface defining standard CRUD data-access contracts via Stored Procedures.

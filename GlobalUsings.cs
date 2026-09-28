@@ -1,7 +1,7 @@
-global using OC_System_Training.Infrastructure.Persistence;
-global using OC_System_Training.Shared.Base;
-global using OC_System_Training.Shared.Base.dto;
-global using OC_System_Training.Shared.Constants;
-global using OC_System_Training.Shared.Enums;
-global using OC_System_Training.Shared.Extensions;
-global using OC_System_Training.Shared.Utils;
+﻿global using Training_Project.Infrastructure.Persistence;
+global using Training_Project.Shared.Base;
+global using Training_Project.Shared.Base.dto;
+global using Training_Project.Shared.Constants;
+global using Training_Project.Shared.Enums;
+global using Training_Project.Shared.Extensions;
+global using Training_Project.Shared.Utils;

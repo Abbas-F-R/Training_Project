@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Base.dto;
+﻿namespace Training_Project.Shared.Base.dto;
 
 /// <summary>
 /// Standardized paginated response envelope providing metadata for consumer clients.

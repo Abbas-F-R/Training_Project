@@ -1,4 +1,4 @@
-namespace OC_System_Training.Features.Departments.Dtos;
+﻿namespace Training_Project.Features.Departments.Dtos;
 
 /// <summary>
 /// Data transfer object for updating an existing academic department.

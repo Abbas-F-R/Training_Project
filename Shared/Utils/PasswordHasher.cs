@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Utils;
+﻿namespace Training_Project.Shared.Utils;
 
 /// <summary>
 /// Cryptographic utility for BCrypt password hashing and verification with automated salting.

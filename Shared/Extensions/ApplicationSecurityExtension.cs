@@ -1,10 +1,10 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace OC_System_Training.Shared.Extensions;
+namespace Training_Project.Shared.Extensions;
 
 /// <summary>
 /// Configures JWT Bearer authentication and Swagger/Scalar security definitions.

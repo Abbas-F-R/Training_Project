@@ -1,9 +1,9 @@
-using FluentValidation;
+﻿using FluentValidation;
 using FluentValidation.AspNetCore;
-using OC_System_Training.Infrastructure.Persistence;
-using OC_System_Training.Shared.Attributes;
+using Training_Project.Infrastructure.Persistence;
+using Training_Project.Shared.Attributes;
 
-namespace OC_System_Training.Shared.Extensions;
+namespace Training_Project.Shared.Extensions;
 
 /// <summary>
 /// Registers application services, persistence context, FluentValidation, and Scrutor automated DI scanning.

@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Base.dto;
+﻿namespace Training_Project.Shared.Base.dto;
 
 /// <summary>
 /// Result envelope unifying operational outcomes, payload, pagination metadata, and error codes.

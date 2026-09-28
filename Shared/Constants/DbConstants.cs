@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Constants;
+﻿namespace Training_Project.Shared.Constants;
 
 /// <summary>
 /// Database table names constants to prevent magic strings across repositories.

@@ -1,4 +1,4 @@
-namespace OC_System_Training.Features.Auth.Dtos;
+﻿namespace Training_Project.Features.Auth.Dtos;
 
 /// <summary>
 /// Data transfer object for administrative user account registration.

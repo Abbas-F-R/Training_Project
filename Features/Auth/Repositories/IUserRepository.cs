@@ -1,6 +1,6 @@
-using OC_System_Training.Features.Auth.Dtos;
+﻿using Training_Project.Features.Auth.Dtos;
 
-namespace OC_System_Training.Features.Auth.Repositories;
+namespace Training_Project.Features.Auth.Repositories;
 
 /// <summary>
 /// Data-access contract for user account queries and persistence.

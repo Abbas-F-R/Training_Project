@@ -1,6 +1,6 @@
-using OC_System_Training.Shared.Helper;
+﻿using Training_Project.Shared.Helper;
 
-namespace OC_System_Training.Shared.Extensions;
+namespace Training_Project.Shared.Extensions;
 
 /// <summary>
 /// Registers API controllers with lowercase URL routing, Sqids model binding, and camelCase JSON serialization.

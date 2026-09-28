@@ -1,8 +1,8 @@
-using System.Text.Json;
-using OC_System_Training.Infrastructure.Logging;
+﻿using System.Text.Json;
+using Training_Project.Infrastructure.Logging;
 using Serilog.Context;
 
-namespace OC_System_Training.Infrastructure.Middleware;
+namespace Training_Project.Infrastructure.Middleware;
 
 /// <summary>
 /// Global exception handling middleware intercepting unhandled exceptions across the HTTP pipeline.

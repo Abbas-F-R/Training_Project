@@ -1,7 +1,7 @@
-using Dapper;
+﻿using Dapper;
 using Microsoft.Extensions.Logging;
 
-namespace OC_System_Training.Infrastructure.Persistence;
+namespace Training_Project.Infrastructure.Persistence;
 
 /// <summary>
 /// Database seeder to ensure initial administrator and standard staff users exist upon startup.

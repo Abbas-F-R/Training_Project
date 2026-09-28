@@ -1,6 +1,6 @@
-using OC_System_Training.Shared.Attributes;
+﻿using Training_Project.Shared.Attributes;
 
-namespace OC_System_Training.Features.Students.Dtos;
+namespace Training_Project.Features.Students.Dtos;
 
 /// <summary>
 /// Data transfer object for updating an existing student profile.

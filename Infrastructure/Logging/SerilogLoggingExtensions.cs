@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Events;
 
-namespace OC_System_Training.Infrastructure.Logging;
+namespace Training_Project.Infrastructure.Logging;
 
 /// <summary>
 /// Configures and registers Serilog structured file logging partitioned by error types.

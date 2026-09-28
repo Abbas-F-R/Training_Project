@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Attributes;
+﻿namespace Training_Project.Shared.Attributes;
 
 /// <summary>
 /// Marks a numeric primary key or foreign key property for automatic Sqids URL-safe encoding and decoding.

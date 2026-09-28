@@ -1,7 +1,7 @@
-using FluentValidation;
-using OC_System_Training.Features.Auth.Dtos;
+﻿using FluentValidation;
+using Training_Project.Features.Auth.Dtos;
 
-namespace OC_System_Training.Features.Auth.Validators;
+namespace Training_Project.Features.Auth.Validators;
 
 /// <summary>
 /// Validator for user registration requests.

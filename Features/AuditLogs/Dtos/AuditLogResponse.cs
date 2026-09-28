@@ -1,6 +1,6 @@
-using OC_System_Training.Shared.Attributes;
+﻿using Training_Project.Shared.Attributes;
 
-namespace OC_System_Training.Features.AuditLogs.Dtos;
+namespace Training_Project.Features.AuditLogs.Dtos;
 
 /// <summary>
 /// Audit trail response representation for administrative audit queries.

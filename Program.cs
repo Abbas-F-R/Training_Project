@@ -1,4 +1,4 @@
-using OC_System_Training.Infrastructure.Logging;
+﻿using Training_Project.Infrastructure.Logging;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,7 +28,7 @@ app.UseApplicationPipeline();
 
 try
 {
-    Log.Information("Starting OC_System_Training web application host...");
+    Log.Information("Starting Training_Project web application host...");
     app.Run();
 }
 catch (Exception ex)

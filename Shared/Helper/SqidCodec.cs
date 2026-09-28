@@ -1,6 +1,6 @@
-using Sqids;
+﻿using Sqids;
 
-namespace OC_System_Training.Shared.Helper;
+namespace Training_Project.Shared.Helper;
 
 /// <summary>
 /// Utility helper for encoding 64-bit integers into obfuscated URL-safe Sqid strings and decoding them back.

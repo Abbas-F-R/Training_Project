@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
-namespace OC_System_Training.Shared.Base;
+namespace Training_Project.Shared.Base;
 
 /// <summary>
 /// Generic base controller encapsulating boilerplate HTTP CRUD endpoint delegation to IBaseService.

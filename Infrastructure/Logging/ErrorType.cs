@@ -1,4 +1,4 @@
-namespace OC_System_Training.Infrastructure.Logging;
+﻿namespace Training_Project.Infrastructure.Logging;
 
 /// <summary>
 /// Categorized error types used for diagnostic routing, telemetry enrichment,

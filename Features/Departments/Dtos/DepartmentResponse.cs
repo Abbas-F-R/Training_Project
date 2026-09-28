@@ -1,6 +1,6 @@
-using OC_System_Training.Shared.Attributes;
+﻿using Training_Project.Shared.Attributes;
 
-namespace OC_System_Training.Features.Departments.Dtos;
+namespace Training_Project.Features.Departments.Dtos;
 
 /// <summary>
 /// Data transfer object representing department details with obfuscated Sqid identifier.

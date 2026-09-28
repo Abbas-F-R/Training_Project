@@ -1,10 +1,10 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
-using OC_System_Training.Features.AuditLogs.Dtos;
-using OC_System_Training.Infrastructure.Persistence;
-using OC_System_Training.Shared.Attributes;
+using Training_Project.Features.AuditLogs.Dtos;
+using Training_Project.Infrastructure.Persistence;
+using Training_Project.Shared.Attributes;
 
-namespace OC_System_Training.Features.AuditLogs.Repositories;
+namespace Training_Project.Features.AuditLogs.Repositories;
 
 /// <summary>
 /// Repository for inserting and querying append-only audit trail entries via Stored Procedures.

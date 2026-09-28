@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Attributes;
+﻿namespace Training_Project.Shared.Attributes;
 
 /// <summary>
 /// Registers the decorated class with Scoped lifetime via Scrutor assembly scanning.

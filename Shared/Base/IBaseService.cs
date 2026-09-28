@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Base;
+﻿namespace Training_Project.Shared.Base;
 
 /// <summary>
 /// Generic service contract defining CRUD operations.

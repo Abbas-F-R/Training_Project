@@ -1,13 +1,13 @@
--- ============================================================================
+﻿-- ============================================================================
 -- 02_Views.sql
 -- Student Management System Database Views
 -- Relational Projection Views with JOINs and Soft-Delete Filters
 -- ============================================================================
 
-USE [OC_System_Training_DB];
+USE [Training_Project_DB];
 GO
 
--- 1. View الخاص بالأقسام: vw_Departments
+-- 1. View Ø§Ù„Ø®Ø§Øµ Ø¨Ø§Ù„Ø£Ù‚Ø³Ø§Ù…: vw_Departments
 CREATE OR ALTER VIEW vw_Departments
 AS
 SELECT
@@ -23,8 +23,8 @@ FROM Departments d
 WHERE d.IsDeleted = 0;
 GO
 
--- 2. View الخاص بالطلاب: vw_Students
--- يربط الطالب بقسمه لإرجاع DepartmentName بدلاً من مجرد المعرف
+-- 2. View Ø§Ù„Ø®Ø§Øµ Ø¨Ø§Ù„Ø·Ù„Ø§Ø¨: vw_Students
+-- ÙŠØ±Ø¨Ø· Ø§Ù„Ø·Ø§Ù„Ø¨ Ø¨Ù‚Ø³Ù…Ù‡ Ù„Ø¥Ø±Ø¬Ø§Ø¹ DepartmentName Ø¨Ø¯Ù„Ø§Ù‹ Ù…Ù† Ù…Ø¬Ø±Ø¯ Ø§Ù„Ù…Ø¹Ø±Ù
 CREATE OR ALTER VIEW vw_Students
 AS
 SELECT

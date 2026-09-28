@@ -1,7 +1,7 @@
-using System.Security.Claims;
-using OC_System_Training.Shared.Attributes;
+﻿using System.Security.Claims;
+using Training_Project.Shared.Attributes;
 
-namespace OC_System_Training.Shared.Base;
+namespace Training_Project.Shared.Base;
 
 /// <summary>
 /// Exposes security claims and identity details of the currently authenticated user.

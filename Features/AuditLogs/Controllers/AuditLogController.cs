@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OC_System_Training.Features.AuditLogs.Dtos;
-using OC_System_Training.Features.AuditLogs.Services;
-using OC_System_Training.Shared.Base;
-using OC_System_Training.Shared.Base.dto;
+using Training_Project.Features.AuditLogs.Dtos;
+using Training_Project.Features.AuditLogs.Services;
+using Training_Project.Shared.Base;
+using Training_Project.Shared.Base.dto;
 
-namespace OC_System_Training.Features.AuditLogs.Controllers;
+namespace Training_Project.Features.AuditLogs.Controllers;
 
 /// <summary>
 /// Controller for viewing immutable audit trail entries (restricted exclusively to Admin role).

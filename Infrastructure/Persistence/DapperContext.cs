@@ -1,7 +1,7 @@
-using System.Data;
+﻿using System.Data;
 using Microsoft.Data.SqlClient;
 
-namespace OC_System_Training.Infrastructure.Persistence;
+namespace Training_Project.Infrastructure.Persistence;
 
 /// <summary>
 /// Manages SQL Server database connections using Dapper.
@@ -15,7 +15,7 @@ public class DapperContext
     {
         _connectionString = configuration.GetConnectionString("DefaultConnection")
                             ?? Environment.GetEnvironmentVariable("CONNECTION_STRING")
-                            ?? "Server=localhost;Database=OC_System_Training_DB;Trusted_Connection=True;TrustServerCertificate=True;";
+                            ?? "Server=localhost;Database=Training_Project_DB;Trusted_Connection=True;TrustServerCertificate=True;";
     }
 
     /// <summary>

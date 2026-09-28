@@ -1,10 +1,10 @@
-using OC_System_Training.Features.Departments.Dtos;
-using OC_System_Training.Features.Departments.Repositories;
-using OC_System_Training.Shared.Attributes;
-using OC_System_Training.Shared.Base.dto;
-using OC_System_Training.Shared.Constants;
+﻿using Training_Project.Features.Departments.Dtos;
+using Training_Project.Features.Departments.Repositories;
+using Training_Project.Shared.Attributes;
+using Training_Project.Shared.Base.dto;
+using Training_Project.Shared.Constants;
 
-namespace OC_System_Training.Features.Departments.Services;
+namespace Training_Project.Features.Departments.Services;
 
 /// <summary>
 /// Department service managing department business operations, code uniqueness validation, and lookup retrieval.

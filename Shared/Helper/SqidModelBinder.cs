@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
-using OC_System_Training.Shared.Attributes;
+using Training_Project.Shared.Attributes;
 using Sqids;
 
-namespace OC_System_Training.Shared.Helper;
+namespace Training_Project.Shared.Helper;
 
 /// <summary>
 /// Model binder for decoding Sqid strings from route values and query parameters into numeric IDs.

@@ -1,4 +1,4 @@
-# Architecture Guide
+﻿# Architecture Guide
 
 ### Vertical Slice Architecture, In-Transaction Auditing, and Clean Layered Design
 
@@ -29,52 +29,52 @@ graph TD
 ## 2. Directory & Component Layout
 
 ```text
-OC_System_Training/
-├── Features/                              <-- Vertical Slice Modules
-│   ├── AuditLogs/                         <-- Immutable Audit Trail Feature
-│   │   ├── Controllers/                   <-- AuditLogController [Authorize(Roles = "Admin")]
-│   │   ├── Dtos/                          <-- AuditLogFilter, AuditLogResponse
-│   │   ├── Repositories/                  <-- IAuditLogRepository, AuditLogRepository
-│   │   ├── Services/                      <-- IAuditLogService, AuditLogService
-│   │   └── Sql/                           <-- Tables, indexes, and stored procedures
-│   ├── Auth/                              <-- Authentication & Identity Feature
-│   │   ├── Controllers/                   <-- AuthController
-│   │   ├── Dtos/                          <-- LoginRequest, LoginResponse, RegisterRequest, UserDto
-│   │   ├── Repositories/                  <-- IUserRepository, UserRepository
-│   │   ├── Services/                      <-- IAuthService, AuthService
-│   │   ├── Sql/                           <-- Users tables, constraints, indexes, SPs
-│   │   └── Validators/                    <-- LoginRequestValidator, RegisterRequestValidator
-│   ├── Departments/                       <-- Academic Departments Feature
-│   │   ├── Controllers/                   <-- DepartmentController (CRUD + Lookup)
-│   │   ├── Dtos/                          <-- DepartmentForm, DepartmentUpdate, DepartmentFilter, DepartmentResponse
-│   │   ├── Repositories/                  <-- IDepartmentRepository, DepartmentRepository
-│   │   ├── Services/                      <-- IDepartmentService, DepartmentService
-│   │   ├── Sql/                           <-- Tables, views, and stored procedures
-│   │   └── Validators/                    <-- DepartmentFormValidator, DepartmentUpdateValidator
-│   └── Students/                          <-- Student Information Feature
-│       ├── Controllers/                   <-- StudentController
-│       ├── Dtos/                          <-- StudentForm, StudentUpdate, StudentFilter, StudentResponse
-│       ├── Repositories/                  <-- IStudentRepository, StudentRepository
-│       ├── Services/                      <-- IStudentService, StudentService
-│       ├── Sql/                           <-- Tables, views, constraints, and stored procedures
-│       └── Validators/                    <-- StudentFormValidator, StudentUpdateValidator, StudentFilterValidator
-├── Infrastructure/                        <-- Shared Infrastructure & Persistence
-│   ├── Middleware/                        <-- UserContextMiddleware
-│   └── Persistence/                       <-- DapperContext, DatabaseSeeder, BaseRepository, RepositoryWrapper
-│       └── Sql/                           <-- 00_Base_Procedures.sql, 01_SeedData.sql
-├── Shared/                                <-- Shared Architectural Building Blocks
-│   ├── Attributes/                        <-- [Scoped], [Transient], [Singleton], [Sqid], [IgnoreParameter]
-│   ├── Base/                              <-- BaseController, GenericController, IBaseService, CurrentUser, dto/
-│   ├── Constants/                         <-- DbConstants, Messages
-│   ├── Enums/                             <-- LanguageType
-│   ├── Extensions/                        <-- Pipeline, Security, Services, Controllers, Cors
-│   └── Utils/                             <-- ErrorMessagesUtils, PasswordHasher, SqidCodec
-├── tests/                                 <-- Automated Test Suite (78 Tests)
-│   └── OC_System_Training.Tests/
-├── Documentation/                         <-- Technical Architecture Guides
-├── sql/                                   <-- MasterMigration.sql (Consolidated DB script)
-├── appsettings.json                       <-- Configuration
-└── Program.cs                             <-- Minimalist composition root
+Training_Project/
+â”œâ”€â”€ Features/                              <-- Vertical Slice Modules
+â”‚   â”œâ”€â”€ AuditLogs/                         <-- Immutable Audit Trail Feature
+â”‚   â”‚   â”œâ”€â”€ Controllers/                   <-- AuditLogController [Authorize(Roles = "Admin")]
+â”‚   â”‚   â”œâ”€â”€ Dtos/                          <-- AuditLogFilter, AuditLogResponse
+â”‚   â”‚   â”œâ”€â”€ Repositories/                  <-- IAuditLogRepository, AuditLogRepository
+â”‚   â”‚   â”œâ”€â”€ Services/                      <-- IAuditLogService, AuditLogService
+â”‚   â”‚   â””â”€â”€ Sql/                           <-- Tables, indexes, and stored procedures
+â”‚   â”œâ”€â”€ Auth/                              <-- Authentication & Identity Feature
+â”‚   â”‚   â”œâ”€â”€ Controllers/                   <-- AuthController
+â”‚   â”‚   â”œâ”€â”€ Dtos/                          <-- LoginRequest, LoginResponse, RegisterRequest, UserDto
+â”‚   â”‚   â”œâ”€â”€ Repositories/                  <-- IUserRepository, UserRepository
+â”‚   â”‚   â”œâ”€â”€ Services/                      <-- IAuthService, AuthService
+â”‚   â”‚   â”œâ”€â”€ Sql/                           <-- Users tables, constraints, indexes, SPs
+â”‚   â”‚   â””â”€â”€ Validators/                    <-- LoginRequestValidator, RegisterRequestValidator
+â”‚   â”œâ”€â”€ Departments/                       <-- Academic Departments Feature
+â”‚   â”‚   â”œâ”€â”€ Controllers/                   <-- DepartmentController (CRUD + Lookup)
+â”‚   â”‚   â”œâ”€â”€ Dtos/                          <-- DepartmentForm, DepartmentUpdate, DepartmentFilter, DepartmentResponse
+â”‚   â”‚   â”œâ”€â”€ Repositories/                  <-- IDepartmentRepository, DepartmentRepository
+â”‚   â”‚   â”œâ”€â”€ Services/                      <-- IDepartmentService, DepartmentService
+â”‚   â”‚   â”œâ”€â”€ Sql/                           <-- Tables, views, and stored procedures
+â”‚   â”‚   â””â”€â”€ Validators/                    <-- DepartmentFormValidator, DepartmentUpdateValidator
+â”‚   â””â”€â”€ Students/                          <-- Student Information Feature
+â”‚       â”œâ”€â”€ Controllers/                   <-- StudentController
+â”‚       â”œâ”€â”€ Dtos/                          <-- StudentForm, StudentUpdate, StudentFilter, StudentResponse
+â”‚       â”œâ”€â”€ Repositories/                  <-- IStudentRepository, StudentRepository
+â”‚       â”œâ”€â”€ Services/                      <-- IStudentService, StudentService
+â”‚       â”œâ”€â”€ Sql/                           <-- Tables, views, constraints, and stored procedures
+â”‚       â””â”€â”€ Validators/                    <-- StudentFormValidator, StudentUpdateValidator, StudentFilterValidator
+â”œâ”€â”€ Infrastructure/                        <-- Shared Infrastructure & Persistence
+â”‚   â”œâ”€â”€ Middleware/                        <-- UserContextMiddleware
+â”‚   â””â”€â”€ Persistence/                       <-- DapperContext, DatabaseSeeder, BaseRepository, RepositoryWrapper
+â”‚       â””â”€â”€ Sql/                           <-- 00_Base_Procedures.sql, 01_SeedData.sql
+â”œâ”€â”€ Shared/                                <-- Shared Architectural Building Blocks
+â”‚   â”œâ”€â”€ Attributes/                        <-- [Scoped], [Transient], [Singleton], [Sqid], [IgnoreParameter]
+â”‚   â”œâ”€â”€ Base/                              <-- BaseController, GenericController, IBaseService, CurrentUser, dto/
+â”‚   â”œâ”€â”€ Constants/                         <-- DbConstants, Messages
+â”‚   â”œâ”€â”€ Enums/                             <-- LanguageType
+â”‚   â”œâ”€â”€ Extensions/                        <-- Pipeline, Security, Services, Controllers, Cors
+â”‚   â””â”€â”€ Utils/                             <-- ErrorMessagesUtils, PasswordHasher, SqidCodec
+â”œâ”€â”€ tests/                                 <-- Automated Test Suite (78 Tests)
+â”‚   â””â”€â”€ Training_Project.Tests/
+â”œâ”€â”€ Documentation/                         <-- Technical Architecture Guides
+â”œâ”€â”€ sql/                                   <-- MasterMigration.sql (Consolidated DB script)
+â”œâ”€â”€ appsettings.json                       <-- Configuration
+â””â”€â”€ Program.cs                             <-- Minimalist composition root
 ```
 
 ---

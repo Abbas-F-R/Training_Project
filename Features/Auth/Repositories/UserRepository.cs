@@ -1,10 +1,10 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
-using OC_System_Training.Features.Auth.Dtos;
-using OC_System_Training.Infrastructure.Persistence;
-using OC_System_Training.Shared.Attributes;
+using Training_Project.Features.Auth.Dtos;
+using Training_Project.Infrastructure.Persistence;
+using Training_Project.Shared.Attributes;
 
-namespace OC_System_Training.Features.Auth.Repositories;
+namespace Training_Project.Features.Auth.Repositories;
 
 /// <summary>
 /// User repository implementation using Dapper and Stored Procedures.

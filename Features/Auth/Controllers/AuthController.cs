@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OC_System_Training.Features.Auth.Dtos;
-using OC_System_Training.Features.Auth.Services;
+using Training_Project.Features.Auth.Dtos;
+using Training_Project.Features.Auth.Services;
 
-namespace OC_System_Training.Features.Auth.Controllers;
+namespace Training_Project.Features.Auth.Controllers;
 
 /// <summary>
 /// Authentication controller handling login, token generation, and user account provisioning.

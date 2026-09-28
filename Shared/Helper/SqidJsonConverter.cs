@@ -1,8 +1,8 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Sqids;
 
-namespace OC_System_Training.Shared.Helper;
+namespace Training_Project.Shared.Helper;
 
 /// <summary>
 /// JSON converter factory for serializing/deserializing long and long? values with Sqids encryption.

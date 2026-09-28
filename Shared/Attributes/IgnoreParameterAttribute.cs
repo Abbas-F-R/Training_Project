@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Attributes;
+﻿namespace Training_Project.Shared.Attributes;
 
 /// <summary>
 /// Instructs BaseRepository to exclude the decorated property from generated Dapper query parameters.

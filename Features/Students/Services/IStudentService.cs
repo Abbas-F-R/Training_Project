@@ -1,6 +1,6 @@
-using OC_System_Training.Features.Students.Dtos;
+﻿using Training_Project.Features.Students.Dtos;
 
-namespace OC_System_Training.Features.Students.Services;
+namespace Training_Project.Features.Students.Services;
 
 /// <summary>
 /// Service contract for student business operations.

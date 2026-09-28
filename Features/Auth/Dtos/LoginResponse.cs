@@ -1,6 +1,6 @@
-using OC_System_Training.Shared.Attributes;
+﻿using Training_Project.Shared.Attributes;
 
-namespace OC_System_Training.Features.Auth.Dtos;
+namespace Training_Project.Features.Auth.Dtos;
 
 /// <summary>
 /// Data transfer object for successful login response containing JWT bearer token and user metadata.

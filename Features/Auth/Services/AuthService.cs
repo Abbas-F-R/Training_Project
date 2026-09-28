@@ -1,16 +1,16 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using OC_System_Training.Features.AuditLogs.Repositories;
-using OC_System_Training.Features.Auth.Dtos;
-using OC_System_Training.Features.Auth.Repositories;
-using OC_System_Training.Shared.Attributes;
-using OC_System_Training.Shared.Base.dto;
-using OC_System_Training.Shared.Constants;
-using OC_System_Training.Shared.Utils;
+using Training_Project.Features.AuditLogs.Repositories;
+using Training_Project.Features.Auth.Dtos;
+using Training_Project.Features.Auth.Repositories;
+using Training_Project.Shared.Attributes;
+using Training_Project.Shared.Base.dto;
+using Training_Project.Shared.Constants;
+using Training_Project.Shared.Utils;
 
-namespace OC_System_Training.Features.Auth.Services;
+namespace Training_Project.Features.Auth.Services;
 
 /// <summary>
 /// Authentication service providing credential verification, BCrypt password hashing,

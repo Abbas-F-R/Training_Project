@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OC_System_Training.Features.Departments.Dtos;
-using OC_System_Training.Features.Departments.Services;
-using OC_System_Training.Shared.Base;
-using OC_System_Training.Shared.Base.dto;
+using Training_Project.Features.Departments.Dtos;
+using Training_Project.Features.Departments.Services;
+using Training_Project.Shared.Base;
+using Training_Project.Shared.Base.dto;
 
-namespace OC_System_Training.Features.Departments.Controllers;
+namespace Training_Project.Features.Departments.Controllers;
 
 /// <summary>
 /// Controller for academic department management.

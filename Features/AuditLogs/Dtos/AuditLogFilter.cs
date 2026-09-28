@@ -1,6 +1,6 @@
-using OC_System_Training.Shared.Base.dto;
+﻿using Training_Project.Shared.Base.dto;
 
-namespace OC_System_Training.Features.AuditLogs.Dtos;
+namespace Training_Project.Features.AuditLogs.Dtos;
 
 /// <summary>
 /// Filter and pagination criteria for audit log search queries.

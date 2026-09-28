@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 
-namespace OC_System_Training.Infrastructure.Logging;
+namespace Training_Project.Infrastructure.Logging;
 
 /// <summary>
 /// Evaluates exceptions and HTTP contexts to categorize errors into structured <see cref="ErrorType"/>s.

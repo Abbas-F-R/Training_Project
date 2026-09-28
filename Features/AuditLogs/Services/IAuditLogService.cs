@@ -1,7 +1,7 @@
-using OC_System_Training.Features.AuditLogs.Dtos;
-using OC_System_Training.Shared.Base.dto;
+﻿using Training_Project.Features.AuditLogs.Dtos;
+using Training_Project.Shared.Base.dto;
 
-namespace OC_System_Training.Features.AuditLogs.Services;
+namespace Training_Project.Features.AuditLogs.Services;
 
 /// <summary>
 /// Service contract for querying audit log records.

@@ -1,7 +1,7 @@
-using OC_System_Training.Shared.Attributes;
-using OC_System_Training.Shared.Base.dto;
+﻿using Training_Project.Shared.Attributes;
+using Training_Project.Shared.Base.dto;
 
-namespace OC_System_Training.Features.Students.Dtos;
+namespace Training_Project.Features.Students.Dtos;
 
 /// <summary>
 /// Query filter and pagination parameters for student directory searches.

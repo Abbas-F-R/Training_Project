@@ -1,6 +1,6 @@
-using OC_System_Training.Features.AuditLogs.Dtos;
+﻿using Training_Project.Features.AuditLogs.Dtos;
 
-namespace OC_System_Training.Features.AuditLogs.Repositories;
+namespace Training_Project.Features.AuditLogs.Repositories;
 
 /// <summary>
 /// Data-access contract for appending audit records and querying historical audit trails.

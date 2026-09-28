@@ -1,7 +1,7 @@
-using OC_System_Training.Infrastructure.Middleware;
+﻿using Training_Project.Infrastructure.Middleware;
 using Scalar.AspNetCore;
 
-namespace OC_System_Training.Shared.Extensions;
+namespace Training_Project.Shared.Extensions;
 
 /// <summary>
 /// Configures the HTTP request processing pipeline in an engineered sequence:
@@ -36,7 +36,7 @@ public static class PipelineExtension
                 app.MapScalarApiReference(options =>
                 {
                     options
-                        .WithTitle("Student Management System API — Scalar")
+                        .WithTitle("Student Management System API â€” Scalar")
                         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
                 }).AllowAnonymous();
             }

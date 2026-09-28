@@ -1,6 +1,6 @@
-using OC_System_Training.Features.Auth.Dtos;
+﻿using Training_Project.Features.Auth.Dtos;
 
-namespace OC_System_Training.Features.Auth.Services;
+namespace Training_Project.Features.Auth.Services;
 
 /// <summary>
 /// Service contract for user authentication, session initiation, and account registration.

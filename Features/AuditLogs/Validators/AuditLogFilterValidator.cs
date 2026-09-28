@@ -1,7 +1,7 @@
-using FluentValidation;
-using OC_System_Training.Features.AuditLogs.Dtos;
+﻿using FluentValidation;
+using Training_Project.Features.AuditLogs.Dtos;
 
-namespace OC_System_Training.Features.AuditLogs.Validators;
+namespace Training_Project.Features.AuditLogs.Validators;
 
 /// <summary>
 /// Validator for audit log pagination and search filter parameters.

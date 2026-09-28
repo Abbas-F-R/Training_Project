@@ -1,7 +1,7 @@
-using FluentValidation;
-using OC_System_Training.Features.Departments.Dtos;
+﻿using FluentValidation;
+using Training_Project.Features.Departments.Dtos;
 
-namespace OC_System_Training.Features.Departments.Validators;
+namespace Training_Project.Features.Departments.Validators;
 
 /// <summary>
 /// Validator for department creation requests.

@@ -1,4 +1,4 @@
-namespace OC_System_Training.Shared.Extensions;
+﻿namespace Training_Project.Shared.Extensions;
 
 /// <summary>
 /// Cross-Origin Resource Sharing (CORS) policy configuration.
