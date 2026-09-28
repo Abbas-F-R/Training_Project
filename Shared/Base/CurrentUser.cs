@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Training_Project.Shared.Attributes;
 
 namespace Training_Project.Shared.Base;
@@ -39,7 +39,29 @@ public class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICurrentUse
     public string UserName => GetClaim("UserName") ?? GetClaim(ClaimTypes.Name) ?? string.Empty;
     public string FullName => GetClaim("FullName") ?? UserName;
     public string Role => GetClaim(ClaimTypes.Role) ?? GetClaim("Role") ?? "User";
-    public string Lang => GetClaim("Lang") ?? "en";
+    public string Lang
+    {
+        get
+        {
+            var httpContext = HttpContext;
+            if (httpContext != null && httpContext.Request.Headers.TryGetValue("Accept-Language", out var acceptHeader) &&
+                !string.IsNullOrWhiteSpace(acceptHeader))
+            {
+                var primary = acceptHeader.ToString().Split(',', ';')[0].Trim().ToLowerInvariant();
+                if (primary.StartsWith("ar")) return "ar";
+                if (primary.StartsWith("en")) return "en";
+            }
+
+            var claimLang = GetClaim("Lang");
+            if (!string.IsNullOrWhiteSpace(claimLang))
+            {
+                var norm = claimLang.Trim().ToLowerInvariant();
+                if (norm == "ar" || norm == "en") return norm;
+            }
+
+            return "en";
+        }
+    }
 
     private string? GetClaim(string claimType)
     {

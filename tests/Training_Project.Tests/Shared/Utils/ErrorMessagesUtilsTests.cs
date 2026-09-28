@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Training_Project.Shared.Constants;
 using Training_Project.Shared.Utils;
 using Xunit;
@@ -18,7 +18,14 @@ public class ErrorMessagesUtilsTests
     public void GetMessage_Arabic_ReturnsArabicTranslation()
     {
         var msg = Messages.InvalidCredentials.GetMessage("ar");
-        msg.Should().Be("Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø£Ùˆ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± ØµØ­ÙŠØ­Ø©.");
+        msg.Should().Be("اسم المستخدم أو كلمة المرور غير صحيحة.");
+    }
+
+    [Fact]
+    public void GetMessage_AuditLogNotFound_ReturnsTranslations()
+    {
+        Messages.AuditLogNotFound.GetMessage("en").Should().Be("The requested audit log was not found.");
+        Messages.AuditLogNotFound.GetMessage("ar").Should().Be("سجل التدقيق المطلوب غير موجود.");
     }
 
     [Fact]

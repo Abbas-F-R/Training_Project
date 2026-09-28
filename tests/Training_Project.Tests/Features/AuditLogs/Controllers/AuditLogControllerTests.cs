@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -60,5 +60,50 @@ public class AuditLogControllerTests
         var response = (Response<AuditLogResponse>)okResult.Value!;
         response.Data.Should().BeEquivalentTo(logs);
         response.TotalCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetAll_ShouldPassCallerLanguageToServiceRequest()
+    {
+        var filter = new AuditLogFilter { PageNumber = 1, PageSize = 10 };
+        var logs = new List<AuditLogResponse>
+        {
+            new()
+            {
+                Id = 1,
+                Action = "INSERT",
+                LocalizedAction = "إضافة",
+                EntityName = "Students",
+                LocalizedEntityName = "الطلاب",
+                Description = "إضافة سجل جديد في الطلاب (معرف: 10)",
+                EntityId = "10",
+                IsSuccess = true
+            }
+        };
+
+        ServiceRequest<AuditLogFilter>? capturedRequest = null;
+        _serviceMock.Setup(s => s.GetAll(It.IsAny<ServiceRequest<AuditLogFilter>>()))
+            .Callback<ServiceRequest<AuditLogFilter>>(req => capturedRequest = req)
+            .ReturnsAsync(ServiceResult<List<AuditLogResponse>>.PagedOk(logs, 1));
+
+        var userMock = new Mock<ICurrentUser>();
+        userMock.Setup(u => u.UserId).Returns(5);
+        userMock.Setup(u => u.UserName).Returns("admin");
+        userMock.Setup(u => u.Role).Returns("Admin");
+        userMock.Setup(u => u.Lang).Returns("ar");
+        _controller.SetCurrentUser(userMock.Object);
+
+        var result = await _controller.GetAll(filter);
+
+        capturedRequest.Should().NotBeNull();
+        capturedRequest!.Lang.Should().Be("ar");
+        capturedRequest.UserId.Should().Be(5);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var okResult = (OkObjectResult)result.Result!;
+        var response = (Response<AuditLogResponse>)okResult.Value!;
+        response.Data[0].LocalizedAction.Should().Be("إضافة");
+        response.Data[0].LocalizedEntityName.Should().Be("الطلاب");
+        response.Data[0].Description.Should().Be("إضافة سجل جديد في الطلاب (معرف: 10)");
     }
 }

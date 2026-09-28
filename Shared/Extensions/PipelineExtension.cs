@@ -1,4 +1,4 @@
-﻿using Training_Project.Infrastructure.Middleware;
+using Training_Project.Infrastructure.Middleware;
 using Scalar.AspNetCore;
 
 namespace Training_Project.Shared.Extensions;
@@ -36,7 +36,8 @@ public static class PipelineExtension
                 app.MapScalarApiReference(options =>
                 {
                     options
-                        .WithTitle("Student Management System API â€” Scalar")
+                        .WithTitle("Student Management System API — Scalar")
+                        .WithOpenApiRoutePattern("/swagger/v1/swagger.json")
                         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
                 }).AllowAnonymous();
             }

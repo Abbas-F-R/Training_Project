@@ -142,7 +142,7 @@ The table below outlines auditing behavior across all database routines:
 - **Authorization:** `[Authorize(Roles = "Admin")]` (Unauthorized or non-admin callers receive `401` or `403`).
 - **Query Parameters:** `pageNumber` (int), `pageSize` (int), `action` (string), `entityName` (string), `userId` (long/sqid).
 
-### Sample Response Payload
+### Sample Response Payload (Localized to Arabic / English)
 ```json
 {
   "data": [
@@ -150,8 +150,11 @@ The table below outlines auditing behavior across all database routines:
       "id": "UkLWZg9D",
       "userId": "UkLWZg9D",
       "action": "INSERT",
+      "localizedAction": "إضافة",
       "entityName": "Students",
+      "localizedEntityName": "الطلاب",
       "entityId": "1",
+      "description": "إضافة سجل جديد في الطلاب (معرف: 1)",
       "changes": "{\"FullName\":\"John Doe\",\"StudentCode\":\"STU-2026-001\",\"DepartmentId\":1,\"Stage\":3}",
       "ipAddress": null,
       "userAgent": null,
@@ -162,8 +165,11 @@ The table below outlines auditing behavior across all database routines:
       "id": "aBcD1234",
       "userId": null,
       "action": "LOGIN_FAILED",
+      "localizedAction": "فشل تسجيل الدخول",
       "entityName": "Auth",
+      "localizedEntityName": "المصادقة",
       "entityId": "unauthorized_user",
+      "description": "محاولة تسجيل دخول فاشلة للمستخدم 'unauthorized_user'",
       "changes": "{\"Reason\":\"InvalidCredentials\"}",
       "ipAddress": null,
       "userAgent": null,
@@ -177,3 +183,23 @@ The table below outlines auditing behavior across all database routines:
   "isLast": true
 }
 ```
+
+---
+
+## 6. Audit Log Localization Architecture
+
+To provide an optimal auditing experience across multilingual environments without breaking programmatic querying or filtering, the Audit Log feature implements non-destructive bilingual enrichment:
+
+1. **Dual Preservation:**
+   - Raw database identifiers (`Action`: `INSERT`, `UPDATE`, `DELETE`, `LOGIN_SUCCESS`, `LOGIN_FAILED` and `EntityName`: `Students`, `Departments`, `Auth`, `Users`) are preserved intact, enabling exact query filtering.
+   - Complementary localized fields (`LocalizedAction`, `LocalizedEntityName`, and `Description`) are populated based on the requested language (`ar` or `en`).
+
+2. **Language Preference Resolution:**
+   - Language is dynamically extracted in `CurrentUser.Lang` with the following precedence:
+     1. `Accept-Language` HTTP request header (e.g., `Accept-Language: ar-EG` or `ar`).
+     2. Authenticated JWT token `Lang` claim.
+     3. Fallback to default (`en`).
+
+3. **Human-Friendly Event Descriptions:**
+   - `AuditLogLocalizer` constructs contextual, grammatically natural summary descriptions (e.g., `"إضافة سجل جديد في الطلاب (معرف: 1)"` or `"Created new record in Students (ID: 1)"`) for rapid visual scanning in administrative portals.
+

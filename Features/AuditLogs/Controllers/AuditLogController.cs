@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Training_Project.Features.AuditLogs.Dtos;
 using Training_Project.Features.AuditLogs.Services;
@@ -17,6 +17,8 @@ public class AuditLogController(IAuditLogService service) : BaseController
 {
     /// <summary>
     /// Retrieves paginated audit log entries with optional filtering by entity, action, or date.
+    /// Responses are automatically localized into Arabic or English based on the caller's language preference
+    /// (resolved via Accept-Language HTTP header or JWT 'Lang' claim).
     /// </summary>
     [HttpGet]
     public async Task<ActionResult<Response<AuditLogResponse>>> GetAll([FromQuery] AuditLogFilter filter) =>

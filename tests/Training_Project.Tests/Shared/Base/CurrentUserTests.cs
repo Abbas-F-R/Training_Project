@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Moq;
@@ -50,6 +50,47 @@ public class CurrentUserTests
         currentUser.UserName.Should().BeEmpty();
         currentUser.FullName.Should().BeEmpty();
         currentUser.Role.Should().Be("User");
+        currentUser.Lang.Should().Be("en");
+    }
+
+    [Fact]
+    public void CurrentUser_WithAcceptLanguageHeader_ResolvesArabicLanguage()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Headers["Accept-Language"] = "ar,en-US;q=0.9";
+
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(context);
+
+        var currentUser = new CurrentUser(_httpContextAccessorMock.Object);
+
+        currentUser.Lang.Should().Be("ar");
+    }
+
+    [Fact]
+    public void CurrentUser_AcceptLanguageHeaderOverridesJwtClaim()
+    {
+        var claims = new List<Claim> { new("Lang", "en") };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var context = new DefaultHttpContext { User = new ClaimsPrincipal(identity) };
+        context.Request.Headers["Accept-Language"] = "ar-SA";
+
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(context);
+
+        var currentUser = new CurrentUser(_httpContextAccessorMock.Object);
+
+        currentUser.Lang.Should().Be("ar");
+    }
+
+    [Fact]
+    public void CurrentUser_WithEnglishAcceptLanguageHeader_ResolvesEnglishLanguage()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Headers["Accept-Language"] = "en-US,en;q=0.8";
+
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(context);
+
+        var currentUser = new CurrentUser(_httpContextAccessorMock.Object);
+
         currentUser.Lang.Should().Be("en");
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Training_Project.Shared.Utils;
+namespace Training_Project.Shared.Utils;
 
 /// <summary>
 /// Central localized error and operational messages dictionary supporting Arabic and English.
@@ -9,63 +9,68 @@ public static class ErrorMessagesUtils
     {
         [Messages.RecordNotFound] = new()
         {
-            ["ar"] = "Ø§Ù„Ø³Ø¬Ù„ Ø§Ù„Ù…Ø·Ù„ÙˆØ¨ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯.",
+            ["ar"] = "السجل المطلوب غير موجود.",
             ["en"] = "The requested record was not found."
         },
         [Messages.InsertFailed] = new()
         {
-            ["ar"] = "ÙØ´Ù„Øª Ø¹Ù…Ù„ÙŠØ© Ø§Ù„Ø¥Ø¶Ø§ÙØ©ØŒ ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.",
+            ["ar"] = "فشلت عملية الإضافة، يرجى المحاولة مرة أخرى.",
             ["en"] = "Failed to insert record, please try again."
         },
         [Messages.UpdateFailed] = new()
         {
-            ["ar"] = "ÙØ´Ù„Øª Ø¹Ù…Ù„ÙŠØ© Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ØŒ ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ£ÙƒØ¯ Ù…Ù† ØµØ­Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª.",
+            ["ar"] = "فشلت عملية التعديل، يرجى التأكد من صحة البيانات.",
             ["en"] = "Failed to update record, please verify input data."
         },
         [Messages.DeleteFailed] = new()
         {
-            ["ar"] = "ÙØ´Ù„Øª Ø¹Ù…Ù„ÙŠØ© Ø§Ù„Ø­Ø°Ù.",
+            ["ar"] = "فشلت عملية الحذف.",
             ["en"] = "Failed to delete record."
         },
         [Messages.DuplicateRecord] = new()
         {
-            ["ar"] = "Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¬Ù„ Ù…ÙˆØ¬ÙˆØ¯ Ù…Ø³Ø¨Ù‚Ø§Ù‹ ÙÙŠ Ø§Ù„Ù†Ø¸Ø§Ù….",
+            ["ar"] = "هذا السجل موجود مسبقاً في النظام.",
             ["en"] = "This record already exists in the system."
         },
         [Messages.DuplicateStudentCode] = new()
         {
-            ["ar"] = "Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¬Ø§Ù…Ø¹ÙŠ Ù„Ù„Ø·Ø§Ù„Ø¨ Ù…Ø³Ø¬Ù„ Ù…Ø³Ø¨Ù‚Ø§Ù‹ Ù„Ø·Ø§Ù„Ø¨ Ø¢Ø®Ø±.",
+            ["ar"] = "الرقم الجامعي للطالب مسجل مسبقاً لطالب آخر.",
             ["en"] = "Student code already belongs to another student."
         },
         [Messages.DuplicateDepartmentCode] = new()
         {
-            ["ar"] = "Ø±Ù…Ø² Ø§Ù„Ù‚Ø³Ù… Ù…Ø³Ø¬Ù„ Ù…Ø³Ø¨Ù‚Ø§Ù‹ Ù„Ù‚Ø³Ù… Ø¢Ø®Ø±.",
+            ["ar"] = "رمز القسم مسجل مسبقاً لقسم آخر.",
             ["en"] = "Department code already exists."
         },
         [Messages.InvalidCredentials] = new()
         {
-            ["ar"] = "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø£Ùˆ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± ØµØ­ÙŠØ­Ø©.",
+            ["ar"] = "اسم المستخدم أو كلمة المرور غير صحيحة.",
             ["en"] = "Invalid username or password."
         },
         [Messages.UserNotFound] = new()
         {
-            ["ar"] = "Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯.",
+            ["ar"] = "المستخدم غير موجود.",
             ["en"] = "User was not found."
         },
         [Messages.UserInactive] = new()
         {
-            ["ar"] = "Ø­Ø³Ø§Ø¨ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ù…Ø¹Ø·Ù„ Ø­Ø§Ù„ÙŠØ§Ù‹.",
+            ["ar"] = "حساب المستخدم معطل حالياً.",
             ["en"] = "User account is currently disabled."
         },
         [Messages.Unauthorized] = new()
         {
-            ["ar"] = "Ù„ÙŠØ³ Ù„Ø¯ÙŠÙƒ ØµÙ„Ø§Ø­ÙŠØ© Ù„ØªÙ†ÙÙŠØ° Ù‡Ø°Ø§ Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡.",
+            ["ar"] = "ليس لديك صلاحية لتنفيذ هذا الإجراء.",
             ["en"] = "You are not authorized to perform this action."
         },
         [Messages.DepartmentNotFound] = new()
         {
-            ["ar"] = "Ø§Ù„Ù‚Ø³Ù… Ø§Ù„Ø¯Ø±Ø§Ø³ÙŠ Ø§Ù„Ù…Ø­Ø¯Ø¯ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯.",
+            ["ar"] = "القسم الدراسي المحدد غير موجود.",
             ["en"] = "The specified department was not found."
+        },
+        [Messages.AuditLogNotFound] = new()
+        {
+            ["ar"] = "سجل التدقيق المطلوب غير موجود.",
+            ["en"] = "The requested audit log was not found."
         }
     };
 
