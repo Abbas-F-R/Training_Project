@@ -1,0 +1,15 @@
+using OC_System_Training.Shared.Attributes;
+
+namespace OC_System_Training.Features.Departments.Dtos;
+
+// تعليق تدريبي: DTO الخاص بمخرجات الأقسام (Response)
+// يستخدم [Sqid] على المعرف لمنع كشف الرقم الفعلي للـ ID للواجهات الأمامية
+public class DepartmentResponse
+{
+    [Sqid]
+    public long Id { get; set; }
+
+    public string Name { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+}
