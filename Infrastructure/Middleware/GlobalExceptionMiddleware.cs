@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Training_Project.Infrastructure.Logging;
 using Serilog.Context;
 
@@ -25,11 +25,10 @@ public class GlobalExceptionMiddleware(
         {
             var errorType = ErrorClassifier.Classify(ex);
 
-            using (LogContext.PushProperty("ErrorType", errorType.ToString()))
             using (LogContext.PushProperty("TraceId", context.TraceIdentifier))
             {
-                logger.LogError(ex, "[{ErrorType}] Unhandled exception occurred during request execution for {Method} {Path}",
-                    errorType, context.Request.Method, context.Request.Path);
+                logger.LogTypedError(errorType, ex, "Unhandled exception occurred during request execution for {Method} {Path}",
+                    context.Request.Method, context.Request.Path);
             }
 
             await HandleExceptionAsync(context, ex, errorType);

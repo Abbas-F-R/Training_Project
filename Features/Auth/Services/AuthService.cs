@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
@@ -30,60 +30,37 @@ public class AuthService(
         var user = await repository.GetByUserName(userName);
         if (user == null)
         {
-            // Record failed authentication attempt without exposing sensitive details
-            await auditLogRepository.LogAsync(
-                userId: null,
-                action: "LOGIN_FAILED",
-                entityName: "Auth",
-                entityId: userName,
-                changes: "{\"Reason\":\"InvalidCredentials\"}",
-                isSuccess: false
-            );
+            await LogFailedLoginAsync(null, userName, "InvalidCredentials");
             return ServiceResult<LoginResponse>.Failure(Messages.InvalidCredentials);
         }
 
         // 2. Validate account active status
         if (!user.IsActive)
         {
-            await auditLogRepository.LogAsync(
-                userId: user.Id,
-                action: "LOGIN_FAILED",
-                entityName: "Auth",
-                entityId: userName,
-                changes: "{\"Reason\":\"UserInactive\"}",
-                isSuccess: false
-            );
+            await LogFailedLoginAsync(user.Id, userName, "UserInactive");
             return ServiceResult<LoginResponse>.Failure(Messages.UserInactive);
         }
 
         // 3. Verify BCrypt hashed password
         if (!PasswordHasher.Verify(request.Password, user.PasswordHash))
         {
-            await auditLogRepository.LogAsync(
-                userId: user.Id,
-                action: "LOGIN_FAILED",
-                entityName: "Auth",
-                entityId: userName,
-                changes: "{\"Reason\":\"InvalidCredentials\"}",
-                isSuccess: false
-            );
+            await LogFailedLoginAsync(user.Id, userName, "InvalidCredentials");
             return ServiceResult<LoginResponse>.Failure(Messages.InvalidCredentials);
         }
 
         // 4. Log successful authentication event to audit log
-        await auditLogRepository.LogAsync(
-            userId: user.Id,
-            action: "LOGIN_SUCCESS",
-            entityName: "Auth",
-            entityId: userName,
-            changes: $"{{\"Role\":\"{user.Role}\"}}",
-            isSuccess: true
-        );
+        await LogAuditAsync(user.Id, userName, "LOGIN_SUCCESS", $"{{\"Role\":\"{user.Role}\"}}", true);
 
         // 5. Generate signed JWT token and return response
         var response = GenerateJwtToken(user);
         return ServiceResult<LoginResponse>.Ok(response);
     }
+
+    private Task LogAuditAsync(long? userId, string entityId, string action, string changes, bool isSuccess) =>
+        auditLogRepository.LogAsync(userId, action, "Auth", entityId, changes, isSuccess: isSuccess);
+
+    private Task LogFailedLoginAsync(long? userId, string userName, string reason) =>
+        LogAuditAsync(userId, userName, "LOGIN_FAILED", $"{{\"Reason\":\"{reason}\"}}", false);
 
     public async Task<ServiceResult<LoginResponse>> Register(RegisterRequest request, long? creatorId = null)
     {

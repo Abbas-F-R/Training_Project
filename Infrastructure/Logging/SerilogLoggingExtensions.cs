@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Events;
@@ -37,77 +37,27 @@ public static class SerilogLoggingExtensions
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
             // 2. Global Rolling Application Log (all Information and above)
-            .WriteTo.Async(a => a.File(
-                path: Path.Combine(logsFolder, "app-.log"),
-                rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: loggingOptions.RetainedFileCountLimit,
-                fileSizeLimitBytes: loggingOptions.FileSizeLimitBytes,
-                rollOnFileSizeLimit: true,
-                outputTemplate: loggingOptions.OutputTemplate,
-                shared: true))
+            .AddPartitionedSink(Path.Combine(logsFolder, "app-.log"), loggingOptions)
             // 3. Consolidated Errors Log (all Warning, Error, Fatal)
-            .WriteTo.Logger(sub => sub
-                .Filter.ByIncludingOnly(e => e.Level >= LogEventLevel.Warning)
-                .WriteTo.Async(a => a.File(
-                    path: Path.Combine(errorsFolder, "all-errors-.log"),
-                    rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: loggingOptions.RetainedFileCountLimit,
-                    fileSizeLimitBytes: loggingOptions.FileSizeLimitBytes,
-                    rollOnFileSizeLimit: true,
-                    outputTemplate: loggingOptions.OutputTemplate,
-                    shared: true)))
+            .AddPartitionedSink(Path.Combine(errorsFolder, "all-errors-.log"), loggingOptions,
+                e => e.Level >= LogEventLevel.Warning)
             // 4. Dedicated Database Errors Log (SQL Server, connectivity, query execution)
-            .WriteTo.Logger(sub => sub
-                .Filter.ByIncludingOnly(e => MatchesErrorType(e, ErrorType.Database) ||
-                                             (e.Exception != null && ErrorClassifier.IsDatabaseException(e.Exception)))
-                .WriteTo.Async(a => a.File(
-                    path: Path.Combine(errorsFolder, "database-errors-.log"),
-                    rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: loggingOptions.RetainedFileCountLimit,
-                    fileSizeLimitBytes: loggingOptions.FileSizeLimitBytes,
-                    rollOnFileSizeLimit: true,
-                    outputTemplate: loggingOptions.OutputTemplate,
-                    shared: true)))
+            .AddPartitionedSink(Path.Combine(errorsFolder, "database-errors-.log"), loggingOptions,
+                e => MatchesErrorType(e, ErrorType.Database) || (e.Exception != null && ErrorClassifier.IsDatabaseException(e.Exception)))
             // 5. Dedicated Security Errors Log (Authentication, Authorization, Tokens)
-            .WriteTo.Logger(sub => sub
-                .Filter.ByIncludingOnly(e => MatchesErrorType(e, ErrorType.Security) ||
-                                             (e.Exception != null && ErrorClassifier.IsSecurityException(e.Exception)))
-                .WriteTo.Async(a => a.File(
-                    path: Path.Combine(errorsFolder, "security-errors-.log"),
-                    rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: loggingOptions.RetainedFileCountLimit,
-                    fileSizeLimitBytes: loggingOptions.FileSizeLimitBytes,
-                    rollOnFileSizeLimit: true,
-                    outputTemplate: loggingOptions.OutputTemplate,
-                    shared: true)))
+            .AddPartitionedSink(Path.Combine(errorsFolder, "security-errors-.log"), loggingOptions,
+                e => MatchesErrorType(e, ErrorType.Security) || (e.Exception != null && ErrorClassifier.IsSecurityException(e.Exception)))
             // 6. Dedicated Validation Errors Log (Input rules, malformed payloads)
-            .WriteTo.Logger(sub => sub
-                .Filter.ByIncludingOnly(e => MatchesErrorType(e, ErrorType.Validation) ||
-                                             (e.Exception != null && ErrorClassifier.IsValidationException(e.Exception)))
-                .WriteTo.Async(a => a.File(
-                    path: Path.Combine(errorsFolder, "validation-errors-.log"),
-                    rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: loggingOptions.RetainedFileCountLimit,
-                    fileSizeLimitBytes: loggingOptions.FileSizeLimitBytes,
-                    rollOnFileSizeLimit: true,
-                    outputTemplate: loggingOptions.OutputTemplate,
-                    shared: true)))
+            .AddPartitionedSink(Path.Combine(errorsFolder, "validation-errors-.log"), loggingOptions,
+                e => MatchesErrorType(e, ErrorType.Validation) || (e.Exception != null && ErrorClassifier.IsValidationException(e.Exception)))
             // 7. Dedicated Unhandled / Runtime Errors Log
-            .WriteTo.Logger(sub => sub
-                .Filter.ByIncludingOnly(e => MatchesErrorType(e, ErrorType.Unhandled) ||
-                                             (e.Level >= LogEventLevel.Error && e.Exception != null &&
-                                              !ErrorClassifier.IsDatabaseException(e.Exception) &&
-                                              !ErrorClassifier.IsSecurityException(e.Exception) &&
-                                              !ErrorClassifier.IsValidationException(e.Exception) &&
-                                              !ErrorClassifier.IsNotFoundException(e.Exception)))
-                .WriteTo.Async(a => a.File(
-                    path: Path.Combine(errorsFolder, "unhandled-errors-.log"),
-                    rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: loggingOptions.RetainedFileCountLimit,
-                    fileSizeLimitBytes: loggingOptions.FileSizeLimitBytes,
-                    rollOnFileSizeLimit: true,
-                    outputTemplate: loggingOptions.OutputTemplate,
-                    shared: true)));
+            .AddPartitionedSink(Path.Combine(errorsFolder, "unhandled-errors-.log"), loggingOptions,
+                e => MatchesErrorType(e, ErrorType.Unhandled) ||
+                     (e.Level >= LogEventLevel.Error && e.Exception != null &&
+                      !ErrorClassifier.IsDatabaseException(e.Exception) &&
+                      !ErrorClassifier.IsSecurityException(e.Exception) &&
+                      !ErrorClassifier.IsValidationException(e.Exception) &&
+                      !ErrorClassifier.IsNotFoundException(e.Exception)));
 
         Log.Logger = loggerConfig.CreateLogger();
         builder.Host.UseSerilog();
@@ -115,13 +65,39 @@ public static class SerilogLoggingExtensions
         return builder;
     }
 
-    private static bool MatchesErrorType(LogEvent logEvent, ErrorType errorType)
+    /// <summary>
+    /// Configures an asynchronous rolling file sink, optionally filtered by predicate.
+    /// Eliminates boilerplate configuration across partitioned sinks.
+    /// </summary>
+    public static LoggerConfiguration AddPartitionedSink(
+        this LoggerConfiguration config,
+        string path,
+        LoggingOptions options,
+        Func<LogEvent, bool>? filter = null)
     {
-        if (logEvent.Properties.TryGetValue("ErrorType", out var propertyValue))
+        Action<LoggerConfiguration> writeToFile = c => c.WriteTo.Async(a => a.File(
+            path: path,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: options.RetainedFileCountLimit,
+            fileSizeLimitBytes: options.FileSizeLimitBytes,
+            rollOnFileSizeLimit: true,
+            outputTemplate: options.OutputTemplate,
+            shared: true));
+
+        if (filter == null)
         {
-            var strVal = propertyValue.ToString();
-            return strVal.Contains(errorType.ToString(), StringComparison.OrdinalIgnoreCase);
+            writeToFile(config);
+            return config;
         }
-        return false;
+
+        return config.WriteTo.Logger(sub =>
+        {
+            sub.Filter.ByIncludingOnly(filter);
+            writeToFile(sub);
+        });
     }
+
+    private static bool MatchesErrorType(LogEvent logEvent, ErrorType errorType) =>
+        logEvent.Properties.TryGetValue("ErrorType", out var propertyValue) &&
+        propertyValue.ToString().Contains(errorType.ToString(), StringComparison.OrdinalIgnoreCase);
 }

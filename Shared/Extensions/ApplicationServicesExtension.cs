@@ -1,12 +1,13 @@
-﻿using FluentValidation;
+using FluentValidation;
 using FluentValidation.AspNetCore;
+using Training_Project.Infrastructure.Logging;
 using Training_Project.Infrastructure.Persistence;
 using Training_Project.Shared.Attributes;
 
 namespace Training_Project.Shared.Extensions;
 
 /// <summary>
-/// Registers application services, persistence context, FluentValidation, and Scrutor automated DI scanning.
+/// Registers application services, persistence context, FluentValidation, Scrutor automated DI scanning, and logging decorators.
 /// </summary>
 public static class ApplicationServicesExtension
 {
@@ -43,6 +44,9 @@ public static class ApplicationServicesExtension
             .AsSelf()
             .WithSingletonLifetime()
         );
+
+        // 4. Decorate domain services with automated logging using the Decorator Pattern
+        services.AddServiceLoggingDecorators();
 
         return services;
     }

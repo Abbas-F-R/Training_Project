@@ -1,4 +1,4 @@
-﻿# Student Management System API
+# Student Management System API
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-14.0-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
@@ -280,12 +280,13 @@ Logs/
 3. **Asynchronous Non-Blocking I/O:** Powered by `Serilog.Sinks.Async`, ensuring file disk writes never block HTTP request threads.
 4. **Automated Rolling & Retention:** Configurable via `appsettings.json` (`LoggingOptions`), defaulting to daily rolls with a 30-day retention purge policy and 10MB file limit.
 5. **Developer Visibility:** High-contrast colorized console output in development, with detailed diagnostic JSON payloads returned by `GlobalExceptionMiddleware` exclusively in Development mode.
+6. **Zero-Boilerplate Decorator Pattern:** [`LoggingDecorator<T>`](Infrastructure/Logging/LoggingDecorator.cs) intercepts domain service invocations dynamically via `DispatchProxy` and Scrutor (`DecorateWithLogging`), capturing execution latency, logging business failures, and routing exceptions automatically with zero logging boilerplate inside business services.
 
 ---
 
 ## Automated Testing Suite
 
-The repository includes a comprehensive, production-grade test suite built with **xUnit**, **FluentAssertions**, and **Moq**, strictly organized file-by-file to mirror the source project's **Features and Infrastructure Architecture**. It verifies 147 distinct test cases across service business logic, authorization rules, security utilities, input validation, structured file logging sinks, and controller responses with 100% pure FluentValidation.
+The repository includes a comprehensive, production-grade test suite built with **xUnit**, **FluentAssertions**, and **Moq**, strictly organized file-by-file to mirror the source project's **Features and Infrastructure Architecture**. It verifies 173 distinct test cases across service business logic, authorization rules, security utilities, input validation, structured file logging sinks, logging decorators, and controller responses with 100% pure FluentValidation.
 
 ```bash
 dotnet test
@@ -293,14 +294,14 @@ dotnet test
 
 ### Test Suite Summary:
 ```text
-Passed!  - Failed: 0, Passed: 147, Skipped: 0, Total: 147, Duration: 1 s
+Passed!  - Failed: 0, Passed: 173, Skipped: 0, Total: 173, Duration: 1 s
 ```
 
 - **`Features/AuditLogs/` (7 tests):** `AuditLogControllerTests`, `AuditLogServiceTests` (paged retrieval & immutability), `AuditLogFilterValidatorTests`.
 - **`Features/Auth/` (15 tests):** `AuthControllerTests`, `AuthServiceTests` (login, passwords, registration, uniqueness), `LoginRequestValidatorTests`, `RegisterRequestValidatorTests`.
 - **`Features/Departments/` (22 tests):** `DepartmentControllerTests`, `DepartmentServiceTests` (CRUD, lookup, code uniqueness), `DepartmentFormValidatorTests`, `DepartmentUpdateValidatorTests`, `DepartmentFilterValidatorTests`.
 - **`Features/Students/` (24 tests):** `StudentControllerTests`, `StudentServiceTests` (CRUD, duplicate student code, department verification), `StudentFormValidatorTests`, `StudentUpdateValidatorTests`, `StudentFilterValidatorTests`.
-- **`Infrastructure/Logging/` (21 tests):** `ErrorClassifierTests` (13 tests), `LoggingOptionsTests` (2 tests), `AppLoggerExtensionsTests` (4 tests), `SerilogFilePartitioningTests` (physical multi-sink file routing verification).
+- **`Infrastructure/Logging/` (26 tests):** `LoggingDecoratorTests` (5 tests), `ErrorClassifierTests` (13 tests), `LoggingOptionsTests` (2 tests), `AppLoggerExtensionsTests` (4 tests), `SerilogFilePartitioningTests` (physical multi-sink file routing verification).
 - **`Infrastructure/Middleware/` (6 tests):** `GlobalExceptionMiddlewareTests` (Dev vs Prod, errorType assertions), `UserContextMiddlewareTests` (UserId claim validation, 401 unauthorized handling).
 - **`Shared/` (52 tests):** `CurrentUserTests`, `ResponseTests`, `ServiceResultTests`, `SqidCodecTests`, `PasswordHasherTests`, `ErrorMessagesUtilsTests`.
 
