@@ -40,6 +40,25 @@ public static class PipelineExtension
                         .WithOpenApiRoutePattern("/swagger/v1/swagger.json")
                         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
                 }).AllowAnonymous();
+
+                // Fallbacks ensuring Scalar static assets and OpenAPI schema resolve seamlessly across all path variants
+                app.MapGet("/openapi/v1.json", () => Results.Redirect("/swagger/v1/swagger.json", permanent: true))
+                    .AllowAnonymous().ExcludeFromDescription();
+
+                app.MapGet("/scalar/v1/scalar.js", () => Results.Redirect("/scalar/scalar.js", permanent: true))
+                    .AllowAnonymous().ExcludeFromDescription();
+
+                app.MapGet("/scalar/v1/scalar.aspnetcore.js", () => Results.Redirect("/scalar/scalar.aspnetcore.js", permanent: true))
+                    .AllowAnonymous().ExcludeFromDescription();
+
+                app.MapGet("/scalar/swagger/v1/swagger.json", () => Results.Redirect("/swagger/v1/swagger.json", permanent: true))
+                    .AllowAnonymous().ExcludeFromDescription();
+
+                app.MapGet("/scalar/openapi/v1.json", () => Results.Redirect("/swagger/v1/swagger.json", permanent: true))
+                    .AllowAnonymous().ExcludeFromDescription();
+
+                app.MapGet("/scalar/v1/openapi/v1.json", () => Results.Redirect("/swagger/v1/swagger.json", permanent: true))
+                    .AllowAnonymous().ExcludeFromDescription();
             }
         }
 
