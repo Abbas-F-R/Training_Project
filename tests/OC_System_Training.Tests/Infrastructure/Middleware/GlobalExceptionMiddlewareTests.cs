@@ -41,6 +41,7 @@ public class GlobalExceptionMiddlewareTests
         root.GetProperty("status").GetInt32().Should().Be(500);
         root.GetProperty("message").GetString().Should().Be("Detailed dev database error occurred!");
         root.GetProperty("exceptionType").GetString().Should().Be("System.InvalidOperationException");
+        root.GetProperty("errorType").GetString().Should().Be("Unhandled");
         root.TryGetProperty("stackTrace", out var stackTrace).Should().BeTrue();
         stackTrace.GetString().Should().NotBeNull();
     }

@@ -1,4 +1,6 @@
 using System.Text.Json;
+using OC_System_Training.Infrastructure.Logging;
+using Serilog.Context;
 
 namespace OC_System_Training.Infrastructure.Middleware;
 
@@ -6,6 +8,7 @@ namespace OC_System_Training.Infrastructure.Middleware;
 /// Global exception handling middleware intercepting unhandled exceptions across the HTTP pipeline.
 /// Returns detailed diagnostic error responses (message, exception type, stack trace) exclusively in Development mode,
 /// while providing safe, non-leaking error responses in Production.
+/// Enriches logging context with categorized ErrorType and TraceId for specialized log file routing.
 /// </summary>
 public class GlobalExceptionMiddleware(
     RequestDelegate next,
@@ -20,12 +23,20 @@ public class GlobalExceptionMiddleware(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unhandled exception occurred during request execution for {Path}", context.Request.Path);
-            await HandleExceptionAsync(context, ex);
+            var errorType = ErrorClassifier.Classify(ex);
+
+            using (LogContext.PushProperty("ErrorType", errorType.ToString()))
+            using (LogContext.PushProperty("TraceId", context.TraceIdentifier))
+            {
+                logger.LogError(ex, "[{ErrorType}] Unhandled exception occurred during request execution for {Method} {Path}",
+                    errorType, context.Request.Method, context.Request.Path);
+            }
+
+            await HandleExceptionAsync(context, ex, errorType);
         }
     }
 
-    private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private async Task HandleExceptionAsync(HttpContext context, Exception exception, ErrorType errorType)
     {
         if (context.Response.HasStarted)
         {
@@ -44,6 +55,7 @@ public class GlobalExceptionMiddleware(
             {
                 status = StatusCodes.Status500InternalServerError,
                 title = "Internal Server Error",
+                errorType = errorType.ToString(),
                 message = exception.Message,
                 exceptionType = exception.GetType().FullName,
                 stackTrace = exception.StackTrace,

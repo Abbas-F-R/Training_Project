@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
+using OC_System_Training.Infrastructure.Logging;
 
 namespace OC_System_Training.Infrastructure.Middleware;
 
 /// <summary>
 /// Pipeline middleware positioned between Authentication and Authorization.
 /// Ensures authenticated requests contain an extracted UserId claim and validates context integrity.
+/// Logs security violations to the specialized security error sink.
 /// </summary>
 public sealed class UserContextMiddleware(RequestDelegate next, ILogger<UserContextMiddleware> logger)
 {
@@ -25,7 +27,7 @@ public sealed class UserContextMiddleware(RequestDelegate next, ILogger<UserCont
 
         if (string.IsNullOrWhiteSpace(userIdClaim))
         {
-            logger.LogWarning("[UserContext] A validated token reached {Path} carrying no UserId", http.Request.Path);
+            logger.LogSecurityError(null, "[UserContext] A validated token reached {Path} carrying no UserId", http.Request.Path);
             http.Response.StatusCode = StatusCodes.Status401Unauthorized;
             http.Response.ContentType = "application/json; charset=utf-8";
             await http.Response.WriteAsJsonAsync(new

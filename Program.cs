@@ -1,4 +1,10 @@
+using OC_System_Training.Infrastructure.Logging;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// 0. Configure Serilog structured file logging partitioned by error types
+builder.AddSerilogLogging();
 
 // 1. Controller registration with Sqids encoding & FluentValidation
 builder.Services.AddControllersExtension();
@@ -20,4 +26,16 @@ await DatabaseSeeder.SeedAsync(app.Services);
 // 6. Application pipeline middleware configuration
 app.UseApplicationPipeline();
 
-app.Run();
+try
+{
+    Log.Information("Starting OC_System_Training web application host...");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application host terminated unexpectedly during execution");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

@@ -4,7 +4,7 @@
 [![C#](https://img.shields.io/badge/C%23-14.0-239120?logo=csharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
 [![SQL Server](https://img.shields.io/badge/SQL_Server-2022-CC292B?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
 [![Dapper](https://img.shields.io/badge/Micro_ORM-Dapper_2.1-orange)](https://github.com/DapperLib/Dapper)
-[![Tests](https://img.shields.io/badge/Tests-120_Passed-success?logo=xunit&logoColor=white)](https://xunit.net/)
+[![Tests](https://img.shields.io/badge/Tests-147_Passed-success?logo=xunit&logoColor=white)](https://xunit.net/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 An enterprise-grade RESTful API engineered for academic institution student management. Built with **.NET 10** following **Vertical Slice (Feature-Based) Architecture**, high-performance **Dapper** data access with SQL Server **Stored Procedures & Views**, **In-Transaction Atomic Audit Logging**, **JWT Authentication with Role-Based Access Control (RBAC)**, and **Sqids URL Obfuscation**.
@@ -68,11 +68,12 @@ graph TD
 | **Database Driver** | Microsoft.Data.SqlClient 7.0.0 | Enterprise SQL Server connectivity |
 | **Authentication** | Microsoft.AspNetCore.Authentication.JwtBearer 10.0.5 | Secure token-based session handling |
 | **Validation** | FluentValidation.AspNetCore 11.3.0 | Strongly typed request validation rules |
+| **Logging & Diagnostics** | Serilog.AspNetCore 10.0.0, Serilog.Sinks.File, Serilog.Sinks.Async | Asynchronous structured file logging partitioned by error types |
 | **Cryptography** | BCrypt.Net-Next 4.1.0 | Salted password hashing |
 | **DI Assembly Scanning** | Scrutor 7.0.0 | Declarative dependency injection via attributes |
 | **Security / Obfuscation** | Sqids 3.2.1 | Obfuscation of internal numeric IDs in APIs |
 | **API Documentation** | Scalar.AspNetCore 2.13.15 & Swashbuckle 10.1.7 | Interactive, modern API documentation |
-| **Testing** | xUnit 2.9.3, FluentAssertions 7.2.0, Moq 4.20.72 | Automated unit and integration testing suite |
+| **Testing** | xUnit 2.9.3, FluentAssertions 7.2.0, Moq 4.20.72 | Automated unit and integration testing suite (147 tests) |
 
 ---
 
@@ -109,8 +110,14 @@ OC_System_Training/
 │       ├── Services/                      <-- IStudentService, StudentService
 │       ├── Sql/                           <-- Tables, views, constraints, and stored procedures
 │       └── Validators/                    <-- StudentFormValidator, StudentUpdateValidator, StudentFilterValidator
-├── Infrastructure/                        <-- Shared Infrastructure & Persistence
-│   ├── Middleware/                        <-- UserContextMiddleware (context validation)
+├── Infrastructure/                        <-- Shared Infrastructure, Diagnostics & Persistence
+│   ├── Logging/                           <-- Structured File Logging Partitioned by Error Types
+│   │   ├── AppLoggerExtensions.cs         <-- High-level typed error logger extensions
+│   │   ├── ErrorClassifier.cs             <-- Automated exception & HTTP error categorizer
+│   │   ├── ErrorType.cs                   <-- Enum (Database, Security, Validation, NotFound, Unhandled)
+│   │   ├── LoggingOptions.cs              <-- Configurable folder, retention (30 days), size limits
+│   │   └── SerilogLoggingExtensions.cs    <-- Async non-blocking file sinks per error type
+│   ├── Middleware/                        <-- GlobalExceptionMiddleware, UserContextMiddleware
 │   ├── Persistence/                       <-- DapperContext, DatabaseSeeder
 │   │   ├── Repositories/                  <-- BaseRepository<T>, RepositoryWrapper
 │   │   └── Sql/                           <-- 00_Base_Procedures.sql, 01_SeedData.sql
@@ -128,19 +135,20 @@ OC_System_Training/
 │   ├── 03_Procedures.sql                  <-- Stored procedures with atomic auditing
 │   ├── 04_SeedData.sql                    <-- Initial seed data
 │   └── MasterMigration.sql                <-- All-in-one consolidated migration script
-├── tests/                                 <-- Automated Test Suite (120 Tests)
-│   └── OC_System_Training.Tests/          <-- Strictly Organized by Feature Architecture
+├── tests/                                 <-- Automated Test Suite (147 Tests)
+│   └── OC_System_Training.Tests/          <-- Strictly Organized by Feature & Layer Architecture
 │       ├── Features/                      <-- Feature-by-feature test coverage
 │       │   ├── AuditLogs/                 <-- Controllers, Services, Validators tests
 │       │   ├── Auth/                      <-- Controllers, Services, Validators tests
 │       │   ├── Departments/               <-- Controllers, Services, Validators tests
 │       │   └── Students/                  <-- Controllers, Services, Validators tests
 │       ├── Infrastructure/
-│       │   └── Middleware/                <-- UserContextMiddleware tests
+│       │   ├── Logging/                   <-- ErrorClassifier, LoggingOptions, AppLogger, FilePartitioning tests
+│       │   └── Middleware/                <-- GlobalExceptionMiddleware, UserContextMiddleware tests
 │       └── Shared/
-│           ├── Base/                          <-- CurrentUser, Response, ServiceResult tests
-│           ├── Helper/                        <-- SqidCodec tests
-│           └── Utils/                         <-- PasswordHasher, ErrorMessagesUtils tests
+│           ├── Base/                      <-- CurrentUser, Response, ServiceResult tests
+│           ├── Helper/                    <-- SqidCodec tests
+│           └── Utils/                     <-- PasswordHasher, ErrorMessagesUtils tests
 ├── Program.cs                             <-- Minimalist, clean composition root
 └── appsettings.json                       <-- Configuration settings
 ```
@@ -251,9 +259,33 @@ Both interfaces feature full support for Bearer JWT token authorization.
 
 ---
 
+## Structured File Logging Partitioned by Error Types
+
+Located in [`Infrastructure/Logging/`](Infrastructure/Logging/), the application implements an enterprise logging architecture using **Serilog** with asynchronous, non-blocking disk I/O, daily rolling partitions, and automated exception classification into dedicated log files:
+
+```text
+Logs/
+├── app-20260928.log                    <-- Global chronological log (Information and above)
+└── errors/
+    ├── all-errors-20260928.log         <-- Consolidated errors (Warning, Error, Fatal)
+    ├── database-errors-20260928.log    <-- SQL Server, connectivity, query execution failures
+    ├── security-errors-20260928.log    <-- Authentication, Authorization, JWT token violations
+    ├── validation-errors-20260928.log  <-- Model validation breaches & bad request diagnostics
+    └── unhandled-errors-20260928.log   <-- Unhandled runtime faults & system crashes (500)
+```
+
+### Key Engineering Practices:
+1. **Separation of Concerns:** Diagnostic logging lives in `Infrastructure/Logging/`, completely independent of business feature slices.
+2. **Automated Error Classification:** [`ErrorClassifier`](Infrastructure/Logging/ErrorClassifier.cs) inspects exception inheritance chains and HTTP status codes to tag log events with their specific [`ErrorType`](Infrastructure/Logging/ErrorType.cs).
+3. **Asynchronous Non-Blocking I/O:** Powered by `Serilog.Sinks.Async`, ensuring file disk writes never block HTTP request threads.
+4. **Automated Rolling & Retention:** Configurable via `appsettings.json` (`LoggingOptions`), defaulting to daily rolls with a 30-day retention purge policy and 10MB file limit.
+5. **Developer Visibility:** High-contrast colorized console output in development, with detailed diagnostic JSON payloads returned by `GlobalExceptionMiddleware` exclusively in Development mode.
+
+---
+
 ## Automated Testing Suite
 
-The repository includes a comprehensive, production-grade test suite built with **xUnit**, **FluentAssertions**, and **Moq**, strictly organized file-by-file to mirror the source project's **Features Architecture**. It verifies 120 distinct test cases across service business logic, authorization rules, security utilities, input validation, and controller responses with 100% pure FluentValidation.
+The repository includes a comprehensive, production-grade test suite built with **xUnit**, **FluentAssertions**, and **Moq**, strictly organized file-by-file to mirror the source project's **Features and Infrastructure Architecture**. It verifies 147 distinct test cases across service business logic, authorization rules, security utilities, input validation, structured file logging sinks, and controller responses with 100% pure FluentValidation.
 
 ```bash
 dotnet test
@@ -261,15 +293,16 @@ dotnet test
 
 ### Test Suite Summary:
 ```text
-Passed!  - Failed: 0, Passed: 120, Skipped: 0, Total: 120, Duration: 865 ms
+Passed!  - Failed: 0, Passed: 147, Skipped: 0, Total: 147, Duration: 1 s
 ```
 
 - **`Features/AuditLogs/` (7 tests):** `AuditLogControllerTests`, `AuditLogServiceTests` (paged retrieval & immutability), `AuditLogFilterValidatorTests`.
 - **`Features/Auth/` (15 tests):** `AuthControllerTests`, `AuthServiceTests` (login, passwords, registration, uniqueness), `LoginRequestValidatorTests`, `RegisterRequestValidatorTests`.
 - **`Features/Departments/` (22 tests):** `DepartmentControllerTests`, `DepartmentServiceTests` (CRUD, lookup, code uniqueness), `DepartmentFormValidatorTests`, `DepartmentUpdateValidatorTests`, `DepartmentFilterValidatorTests`.
 - **`Features/Students/` (24 tests):** `StudentControllerTests`, `StudentServiceTests` (CRUD, duplicate student code, department verification), `StudentFormValidatorTests`, `StudentUpdateValidatorTests`, `StudentFilterValidatorTests`.
-- **`Infrastructure/Middleware/` (3 tests):** `UserContextMiddlewareTests` (UserId claim validation, 401 unauthorized handling, context bypass).
-- **`Shared/` (49 tests):** `CurrentUserTests` (claims resolution), `ResponseTests` (pagination arithmetic), `ServiceResultTests` (result envelopes), `SqidCodecTests` (encode/decode roundtrip), `PasswordHasherTests` (BCrypt hashing and salt uniqueness), `ErrorMessagesUtilsTests` (bilingual localization).
+- **`Infrastructure/Logging/` (21 tests):** `ErrorClassifierTests` (13 tests), `LoggingOptionsTests` (2 tests), `AppLoggerExtensionsTests` (4 tests), `SerilogFilePartitioningTests` (physical multi-sink file routing verification).
+- **`Infrastructure/Middleware/` (6 tests):** `GlobalExceptionMiddlewareTests` (Dev vs Prod, errorType assertions), `UserContextMiddlewareTests` (UserId claim validation, 401 unauthorized handling).
+- **`Shared/` (52 tests):** `CurrentUserTests`, `ResponseTests`, `ServiceResultTests`, `SqidCodecTests`, `PasswordHasherTests`, `ErrorMessagesUtilsTests`.
 
 ---
 
